@@ -1,0 +1,3 @@
+# Pure Python standard library (heapq, math, collections, datetime)
+# No heavy external dependencies required for deterministic solver
+numpy>=1.24.0

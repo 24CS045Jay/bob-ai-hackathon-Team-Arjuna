@@ -1,0 +1,12 @@
+{
+  "quay_crane_utilization": 0.5300366446053004,
+  "yard_occupancy_pct": 0.2142779613815938,
+  "vessel_count": 0.1477535428344897,
+  "weather_wind_knots": 0.04775624595604892,
+  "tide_height_m": 0.04317620071049071,
+  "weather_visibility_nm": 0.005002750083412655,
+  "avg_draft_m": 0.003712832939686304,
+  "hour_of_day": 0.003365716723106259,
+  "zone_encoded": 0.0029573444338323756,
+  "day_of_week": 0.0019607603320388593
+}
