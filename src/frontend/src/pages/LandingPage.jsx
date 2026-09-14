@@ -1,8 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import OceanAnimation from '../components/layout/OceanAnimation.jsx'
-import RoleCard from '../components/auth/RoleCard.jsx'
-import SmartPortShowcase from '../components/landing/SmartPortShowcase.jsx'
+import TerminalShowcase from '../components/landing/TerminalShowcase.jsx'
 import { useRole } from '../context/RoleContext.jsx'
 import { scrollRevealVariants } from '../utils/motion.js'
 
@@ -16,9 +15,11 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-obsidian-900 text-ink flex flex-col selection:bg-amber-500/30 transition-colors overflow-x-hidden font-sans">
-      {/* Top Floating Pill Navigation Bar (matching reference header) */}
-      <header className="relative z-30 pt-4 sm:pt-6 px-4 sm:px-8 max-w-7xl mx-auto w-full">
+    <div className="min-h-screen bg-canvas text-ink flex flex-col selection:bg-brand/30 transition-colors overflow-x-hidden font-sans">
+      {/* Deep Maritime Twilight Container for Hero & Floating Navigation */}
+      <div className="bg-[#060E18] relative">
+        {/* Top Floating Pill Navigation Bar (matching reference header) */}
+        <header className="relative z-30 pt-4 sm:pt-6 px-4 sm:px-8 max-w-7xl mx-auto w-full">
         <nav className="backdrop-blur-xl bg-slate-900/50 border border-white/20 rounded-full px-5 sm:px-8 py-3.5 flex items-center justify-between shadow-[0_12px_40px_rgba(0,0,0,0.4)]">
           {/* Brand Logo & Name */}
           <div 
@@ -254,6 +255,7 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      </div>
 
       {/* 1. Single-Line Trust-Bar KPI Strip */}
       <motion.section 
@@ -283,8 +285,8 @@ export default function LandingPage() {
         </div>
       </motion.section>
 
-      {/* 2. Scroll-Triggered Animated Port Section */}
-      <SmartPortShowcase />
+      {/* 2. Real-World Terminal Showcase with Scroll-Synced Hotspots */}
+      <TerminalShowcase />
 
       {/* 3. Minimal Value-Prop Section */}
       <motion.section 
@@ -346,28 +348,37 @@ export default function LandingPage() {
         </div>
       </motion.section>
 
-      {/* 4. Role Picker Section */}
+      {/* 4. Terminal Portal Access CTA */}
       <motion.section 
-        id="roles"
         {...scrollRevealVariants}
-        className="py-14 px-6 sm:px-12 max-w-6xl mx-auto w-full"
+        className="py-12 px-6 sm:px-12 max-w-6xl mx-auto w-full"
       >
-        <div className="text-center max-w-xl mx-auto mb-8">
-          <span className="text-xs font-semibold uppercase tracking-wider text-brand bg-brand/10 border border-brand/20 px-3 py-1 rounded-full">
-            Role-Based Access
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-bold text-ink tracking-tight mt-3 mb-2">
-            Select Operational Duty Station
-          </h2>
-          <p className="text-sm text-inksoft">
-            Direct access to specialized workstations configured for terminal duties.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {roles.map((role) => (
-            <RoleCard key={role.code} role={role} onSelect={enterAs} />
-          ))}
+        <div className="bg-surface rounded-3xl border border-line p-8 sm:p-10 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+          <div className="absolute right-0 top-0 w-96 h-96 bg-brand/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="max-w-xl relative z-10">
+            <span className="text-xs font-semibold uppercase tracking-wider text-brand bg-brand/10 border border-brand/20 px-3 py-1 rounded-full">
+              Terminal Workstation Access
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-ink tracking-tight mt-3 mb-2">
+              Ready to enter Pier 400 Operations Console?
+            </h2>
+            <p className="text-sm text-inksoft">
+              Log in with your designated duty station (Operations Admin, Shift Supervisor, Berth Planner, Gate Controller, or Executive Viewer).
+            </p>
+          </div>
+          <div className="relative z-10 flex items-center gap-3">
+            <button
+              onClick={() => navigate('/login')}
+              className="px-6 py-3.5 rounded-xl bg-brand hover:bg-brand/90 text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <span>Operator Sign In</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                <polyline points="10 17 15 12 10 7" />
+                <line x1="15" y1="12" x2="3" y2="12" />
+              </svg>
+            </button>
+          </div>
         </div>
       </motion.section>
 

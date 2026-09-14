@@ -9,7 +9,7 @@ import { listItemVariants, buttonPressInteraction } from '../utils/motion.js'
 
 export default function AlertsPage() {
   const { can, logAction, activeRole } = useRole()
-  const [alertsList, setAlertsList] = useState(ALERTS)
+  const [alertsList] = useState(ALERTS)
   const [acked, setAcked] = useState({})
   const [sevFilter, setSevFilter] = useState('all') // 'all' | 'red' | 'amber' | 'blue'
   const [categoryFilter, setCategoryFilter] = useState('all')
@@ -58,36 +58,36 @@ export default function AlertsPage() {
 
   return (
     <AppShell crumb="Alerts &amp; Operational Exceptions">
-      <div className="space-y-4 max-w-[1680px] mx-auto select-none">
+      <div className="space-y-5 max-w-[1680px] mx-auto select-none font-sans">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 glass p-4 sm:p-5 rounded-2xl border border-line">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-surface p-5 sm:p-6 rounded-3xl border border-line shadow-xs">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-brand-glow bg-brand/15 px-2 py-0.5 rounded border border-brand/30">
+            <div className="flex items-center gap-2.5 mb-2">
+              <span className="text-xs font-bold text-[#0085db] bg-sky-100 dark:bg-sky-950/50 px-3 py-1 rounded-full border border-sky-200 dark:border-sky-800">
                 Live Exception Feed
               </span>
-              <span className="text-xs text-inksoft font-mono">
+              <span className="text-xs text-inksoft font-medium">
                 Quayside, Gate, Intermodal &amp; Vessel Exceptions
               </span>
             </div>
-            <h2 className="text-lg sm:text-xl font-bold text-ink">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-ink tracking-tight">
               Operational Exceptions &amp; Demurrage Warnings
             </h2>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 font-mono text-xs">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2.5 bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-2xl border border-line text-xs font-semibold">
               <span className="text-inksoft">Unacknowledged:</span>
               <span className="text-ink font-bold">{activeCount}</span>
-              <span className="text-lineSoft">·</span>
-              <span className="text-crit font-bold">{critCount} Critical</span>
+              <span className="text-line">•</span>
+              <span className="text-rose-600 dark:text-rose-400 font-bold">{critCount} Critical</span>
             </div>
 
             {canAck && activeCount > 0 && (
               <motion.button
                 whileTap={buttonPressInteraction}
                 onClick={handleBulkAck}
-                className="text-xs font-semibold px-3 py-1.5 rounded-lg glass border border-line hover:border-lineSoft text-ink hover:text-brand-glow transition-all font-mono"
+                className="text-xs font-bold px-4 py-2 rounded-xl bg-[#0085db] text-white hover:bg-[#0074c2] transition-all cursor-pointer shadow-xs"
               >
                 Acknowledge Filtered ({filtered.length})
               </motion.button>
@@ -96,10 +96,10 @@ export default function AlertsPage() {
         </div>
 
         {/* Filter and Search Bar */}
-        <div className="glass rounded-2xl p-4 border border-line space-y-3">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+        <div className="bg-surface rounded-3xl p-5 border border-line shadow-xs space-y-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             {/* Severity Tabs */}
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap">
               {[
                 { id: 'all', label: 'All Severities' },
                 { id: 'red', label: 'Critical' },
@@ -109,10 +109,10 @@ export default function AlertsPage() {
                 <button
                   key={s.id}
                   onClick={() => setSevFilter(s.id)}
-                  className={`text-xs px-3 py-1.5 rounded-xl font-medium transition-all ${
+                  className={`text-xs px-3.5 py-2 rounded-xl font-bold transition-all cursor-pointer ${
                     sevFilter === s.id
-                      ? 'bg-brand/20 text-brand-glow border border-brand/40 font-semibold shadow-sm'
-                      : 'glass border-line text-inksoft hover:text-ink'
+                      ? 'bg-[#0085db] text-white shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-inksoft hover:text-ink'
                   }`}
                 >
                   {s.label}
@@ -121,19 +121,18 @@ export default function AlertsPage() {
             </div>
 
             {/* Search Box */}
-            <div className="w-full md:w-72">
+            <div className="w-full md:w-80">
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Filter by zone, vessel, or cause…"
-                mono
               />
             </div>
           </div>
 
           {/* Category Filter Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto text-[11px] pt-1 border-t border-line/40">
-            <span className="text-inksoft font-mono text-[10px] mr-1 uppercase">Terminal Unit:</span>
+          <div className="flex items-center gap-2 overflow-x-auto text-xs pt-2 border-t border-line scrollbar-none">
+            <span className="text-inksoft font-bold text-xs mr-1 uppercase">Terminal Unit:</span>
             {[
               { id: 'all', label: 'All Units' },
               { id: 'gate', label: 'Drayage Gates' },
@@ -144,10 +143,10 @@ export default function AlertsPage() {
               <button
                 key={cat.id}
                 onClick={() => setCategoryFilter(cat.id)}
-                className={`px-2.5 py-0.5 rounded-md font-medium transition-colors whitespace-nowrap ${
+                className={`px-3 py-1 rounded-xl font-semibold transition-all whitespace-nowrap cursor-pointer ${
                   categoryFilter === cat.id
-                    ? 'bg-brand/15 text-brand-glow font-semibold border border-brand/30'
-                    : 'text-inksoft hover:text-ink hover:bg-obsidian-800/60'
+                    ? 'bg-sky-100 dark:bg-sky-950/60 text-[#0085db] font-bold border border-sky-200 dark:border-sky-800'
+                    : 'text-inksoft hover:text-ink hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 {cat.label}
@@ -157,7 +156,7 @@ export default function AlertsPage() {
         </div>
 
         {/* Alerts Grid */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           <AnimatePresence initial={false}>
             {filtered.length === 0 ? (
               <motion.div
@@ -165,7 +164,7 @@ export default function AlertsPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="glass rounded-2xl p-12 text-center text-xs text-inksoft border border-line"
+                className="bg-surface rounded-3xl p-12 text-center text-xs sm:text-sm text-inksoft border border-line font-medium shadow-xs"
               >
                 No operational exceptions match current filter parameters.
               </motion.div>
@@ -182,25 +181,25 @@ export default function AlertsPage() {
                     initial="initial"
                     animate="animate"
                     exit="exit"
-                    className={`glass rounded-2xl p-5 border transition-all flex flex-col md:flex-row md:items-start justify-between gap-4 ${
+                    className={`bg-surface rounded-3xl p-6 border transition-all flex flex-col md:flex-row md:items-start justify-between gap-5 shadow-xs ${
                       isAcknowledged
-                        ? 'opacity-40 border-line/40'
+                        ? 'opacity-40 border-line'
                         : isCrit
-                        ? 'border-crit/40 bg-crit/[0.03] shadow-[0_0_16px_rgba(229,73,61,0.08)]'
+                        ? 'border-rose-200 dark:border-rose-900 bg-rose-50/20 dark:bg-rose-950/10'
                         : isWarn
-                        ? 'border-amber/40 bg-amber/[0.02]'
-                        : 'border-line hover:border-lineSoft'
+                        ? 'border-amber-200 dark:border-amber-900 bg-amber-50/20 dark:bg-amber-950/10'
+                        : 'border-line hover:border-slate-300 dark:hover:border-slate-700'
                     }`}
                   >
-                    <div className="space-y-2 min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
+                    <div className="space-y-2.5 min-w-0 flex-1">
+                      <div className="flex items-center gap-2.5 flex-wrap">
                         <span
                           className={`rounded-full flex-none ${
                             isCrit
-                              ? 'w-2.5 h-2.5 bg-crit animate-critGlow shadow-[0_0_8px_rgba(229,73,61,0.6)]'
+                              ? 'w-2.5 h-2.5 bg-rose-500 ring-4 ring-rose-100 dark:ring-rose-950/50'
                               : isWarn
-                              ? 'w-2 h-2 bg-amber'
-                              : 'w-2 h-2 bg-brand'
+                              ? 'w-2.5 h-2.5 bg-amber-500'
+                              : 'w-2.5 h-2.5 bg-[#0085db]'
                           }`}
                         />
                         <Badge
@@ -209,48 +208,48 @@ export default function AlertsPage() {
                         >
                           {isCrit ? 'Critical Exception' : isWarn ? 'Elevated Risk' : 'Standard Advisory'}
                         </Badge>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-obsidian-800/80 text-ink border border-line">
+                        <span className="text-xs font-bold px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-ink border border-line">
                           {alert.category?.toUpperCase() || 'GENERAL'}
                         </span>
                         {alert.zone && (
-                          <span className="text-[10px] font-mono text-brand-glow bg-brand/10 px-2 py-0.5 rounded border border-brand/20">
+                          <span className="text-xs font-bold text-[#0085db] bg-sky-50 dark:bg-sky-950/50 px-2.5 py-0.5 rounded-lg border border-sky-200 dark:border-sky-800">
                             {alert.zone}
                           </span>
                         )}
-                        <span className="text-[10.5px] font-mono text-inksoft ml-auto md:ml-2">
+                        <span className="text-xs text-inksoft font-medium ml-auto md:ml-2">
                           {alert.meta}
                         </span>
                       </div>
 
-                      <h4 className="text-sm font-semibold text-ink leading-snug">
+                      <h4 className="text-base font-bold text-ink leading-snug">
                         {alert.msg}
                       </h4>
 
                       {alert.rootCause && (
-                        <div className="text-xs text-inksoft leading-relaxed pt-1">
-                          <b className="text-ink font-medium">Root Cause:</b> {alert.rootCause}
+                        <div className="text-xs sm:text-sm text-inksoft leading-relaxed pt-0.5">
+                          <b className="text-ink font-semibold">Root Cause:</b> {alert.rootCause}
                         </div>
                       )}
 
                       {alert.resolution && (
-                        <div className="p-2.5 rounded-xl bg-obsidian-800/70 border border-line/50 text-xs text-brand-glow flex items-start gap-2">
-                          <span className="font-mono text-[11px] font-bold flex-none">Resolution:</span>
-                          <span className="text-ink font-medium">{alert.resolution}</span>
+                        <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-line text-xs flex items-start gap-2">
+                          <span className="text-xs font-bold text-[#0085db] flex-none">Resolution:</span>
+                          <span className="text-ink font-medium leading-relaxed">{alert.resolution}</span>
                         </div>
                       )}
                     </div>
 
                     {/* Acknowledge Button Gated by Role */}
-                    <div className="flex-none flex items-center md:flex-col justify-between md:justify-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-line/40">
+                    <div className="flex-none flex items-center md:flex-col justify-between md:justify-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-line">
                       {canAck ? (
                         <motion.button
                           whileTap={buttonPressInteraction}
                           onClick={() => handleAck(alert)}
                           disabled={isAcknowledged}
-                          className={`text-xs font-semibold px-4 py-2 rounded-xl border transition-all ${
+                          className={`text-xs font-bold px-4 py-2.5 rounded-xl border transition-all cursor-pointer ${
                             isAcknowledged
-                              ? 'border-ok/30 text-ok bg-ok/10 cursor-default'
-                              : 'bg-brand/15 hover:bg-brand/25 text-brand-glow border-brand/35 shadow-[0_0_10px_rgba(59,124,246,0.25)]'
+                              ? 'border-emerald-300 text-emerald-700 bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 cursor-default'
+                              : 'bg-[#0085db] hover:bg-[#0074c2] text-white border-transparent shadow-sm'
                           }`}
                         >
                           {isAcknowledged ? 'Acknowledged ✓' : 'Acknowledge'}
@@ -258,7 +257,7 @@ export default function AlertsPage() {
                       ) : (
                         <span
                           title="Read-only perspective: Acknowledgment requires Shift Supervisor or Admin privilege"
-                          className="text-[11px] font-mono text-inksoft/40 border border-line/40 px-3 py-1.5 rounded-xl cursor-not-allowed"
+                          className="text-xs font-semibold text-inksoft/50 border border-line px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 cursor-not-allowed"
                         >
                           Read Only ({activeRole?.tag})
                         </span>

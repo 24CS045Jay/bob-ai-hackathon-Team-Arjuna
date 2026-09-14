@@ -35,21 +35,22 @@ export default function AuditLogModal() {
     <Modal
       isOpen={isAuditLogOpen}
       onClose={() => setIsAuditLogOpen(false)}
-      title="Operational Activity & Audit Trail"
-      subtitle="In-session accountability log tracking decisions, security overrides, and approvals"
+      title="Operational Activity &amp; Terminal Messages"
+      subtitle="Comprehensive accountability log tracking operator decisions, overrides, and live system broadcasts"
       maxWidth="max-w-2xl"
     >
-      <div className="space-y-4">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+      <div className="space-y-4 font-sans">
+        {/* Filter Pills */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-none">
           {actions.map((act) => (
             <motion.button
               whileTap={buttonPressInteraction}
               key={act}
               onClick={() => setFilterAction(act)}
-              className={`text-[10.5px] font-mono px-2.5 py-1 rounded-md transition-colors whitespace-nowrap ${
+              className={`text-xs font-semibold px-3 py-1.5 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
                 filterAction === act
-                  ? 'bg-brand text-white font-semibold'
-                  : 'glass text-inksoft hover:text-ink hover:bg-obsidian-800/60'
+                  ? 'bg-[#0085db] text-white shadow-xs'
+                  : 'bg-slate-100 dark:bg-slate-800 text-inksoft hover:text-ink hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
               {act.replace('_', ' ')}
@@ -57,37 +58,38 @@ export default function AuditLogModal() {
           ))}
         </div>
 
-        <div className="space-y-2.5 max-h-[440px] overflow-y-auto pr-1">
+        {/* Records List */}
+        <div className="space-y-3 max-h-[440px] overflow-y-auto pr-1">
           {filtered.length === 0 ? (
-            <div className="text-center py-8 text-xs text-inksoft">
+            <div className="text-center py-10 text-xs text-inksoft font-medium">
               No audit records matching "{filterAction}"
             </div>
           ) : (
             filtered.map((item) => (
               <div
                 key={item.id}
-                className="p-3.5 glass border border-line rounded-xl hover:border-lineSoft transition-colors"
+                className="p-4 bg-surface border border-line rounded-2xl shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
               >
-                <div className="flex items-start justify-between gap-3 mb-1.5">
+                <div className="flex items-start justify-between gap-3 mb-2">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-xs font-semibold text-ink">
-                      {item.action}
+                    <span className="text-xs font-bold text-ink">
+                      {item.action.replace('_', ' ')}
                     </span>
                     <Badge variant={roleColors[item.roleCode] || 'neutral'} size="sm">
                       {item.roleTitle}
                     </Badge>
                   </div>
-                  <span className="font-mono text-[10.5px] text-inksoft flex-none">
+                  <span className="text-xs font-semibold text-inksoft flex-none">
                     {item.timestamp}
                   </span>
                 </div>
 
-                <div className="text-xs text-inksoft flex items-center gap-1.5 mb-1">
-                  <span className="text-ink font-medium">Target:</span>
-                  <span className="font-mono text-brand-glow">{item.target}</span>
+                <div className="text-xs text-inksoft flex items-center gap-1.5 mb-2 font-medium">
+                  <span className="text-ink font-semibold">Target:</span>
+                  <span className="text-[#0085db] font-bold">{item.target}</span>
                 </div>
 
-                <p className="text-[11.5px] text-ink/85 leading-relaxed bg-obsidian-800/60 p-2.5 rounded-lg border border-line/50 font-sans">
+                <p className="text-xs text-ink leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-line/60 font-medium">
                   {item.details}
                 </p>
               </div>

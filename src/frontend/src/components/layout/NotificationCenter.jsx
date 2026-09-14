@@ -42,35 +42,38 @@ export default function NotificationCenter() {
 
   const typeIcons = {
     alert: (
-      <span className="w-2 h-2 rounded-full bg-crit animate-critGlow shadow-[0_0_6px_rgba(229,73,61,0.6)] flex-none mt-1.5" />
+      <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)] flex-none mt-1" />
     ),
     plan: (
-      <span className="w-2 h-2 rounded-full bg-brand-glow flex-none mt-1.5" />
+      <span className="w-2.5 h-2.5 rounded-full bg-[#0085db] flex-none mt-1" />
     ),
     action: (
-      <span className="w-2 h-2 rounded-full bg-ok flex-none mt-1.5" />
+      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-none mt-1" />
     ),
     system: (
-      <span className="w-2 h-2 rounded-full bg-inksoft flex-none mt-1.5" />
+      <span className="w-2.5 h-2.5 rounded-full bg-slate-400 flex-none mt-1" />
     )
   }
 
   return (
-    <div className="relative" ref={panelRef}>
+    <div className="relative font-sans" ref={panelRef}>
       <motion.button
         whileTap={buttonPressInteraction}
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Notification Center"
-        className={`relative w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-          isOpen ? 'bg-obsidian-800 text-ink border border-lineSoft' : 'text-inksoft hover:text-ink hover:bg-obsidian-800/60'
+        title="Notifications"
+        className={`relative w-10 h-10 rounded-2xl flex items-center justify-center transition-colors cursor-pointer ${
+          isOpen
+            ? 'bg-slate-100 dark:bg-slate-800 text-ink'
+            : 'text-inksoft hover:text-ink hover:bg-slate-100 dark:hover:bg-slate-800'
         }`}
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-          <path d="M12 2C9 2 7 4.5 7 8v4l-2 4h14l-2-4V8c0-3.5-2-6-5-6z" stroke="currentColor" strokeWidth="1.6" />
-          <path d="M10 18a2 2 0 004 0" stroke="currentColor" strokeWidth="1.6" />
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
         </svg>
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-crit text-white text-[9.5px] font-mono font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-obsidian-900 shadow-sm animate-pulseDot">
+          <span className="absolute top-1.5 right-1.5 bg-rose-500 text-white text-[9.5px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
             {unreadCount}
           </span>
         )}
@@ -79,35 +82,37 @@ export default function NotificationCenter() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.97 }}
+            initial={{ opacity: 0, y: 8, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.97 }}
-            transition={{ duration: 0.15 }}
-            className="absolute right-0 mt-2 w-80 sm:w-96 glass-strong border border-lineSoft rounded-2xl shadow-2xl z-50 overflow-hidden"
+            exit={{ opacity: 0, y: 6, scale: 0.96 }}
+            transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute right-0 mt-3 w-80 sm:w-96 bg-surface border border-line rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.55)] z-50 overflow-hidden"
           >
-            <div className="flex items-center justify-between p-3.5 border-b border-line bg-obsidian-800/60">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-line bg-slate-50/70 dark:bg-slate-800/40">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-ink">Notifications</span>
-                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-brand/15 text-brand-glow border border-brand/30">
+                <span className="text-sm font-bold text-ink">Notifications</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-[#0085db] dark:bg-sky-950/60 dark:text-sky-300">
                   {unreadCount} new
                 </span>
               </div>
               {unreadCount > 0 && (
                 <button
                   onClick={markAllNotificationsRead}
-                  className="text-[11px] text-inksoft hover:text-brand-glow transition-colors font-medium font-mono"
+                  className="text-xs text-[#0085db] hover:underline font-bold transition-colors cursor-pointer"
                 >
                   Mark all read
                 </button>
               )}
             </div>
 
-            <div className="flex border-b border-line px-3 pt-2 gap-3 text-xs">
+            {/* Filter Tabs */}
+            <div className="flex border-b border-line px-4 pt-2.5 gap-4 text-xs font-semibold">
               <button
                 onClick={() => setActiveTab('all')}
-                className={`pb-2 border-b-2 font-medium transition-colors ${
+                className={`pb-2.5 border-b-2 transition-colors cursor-pointer ${
                   activeTab === 'all'
-                    ? 'border-brand text-brand-glow font-semibold'
+                    ? 'border-[#0085db] text-[#0085db]'
                     : 'border-transparent text-inksoft hover:text-ink'
                 }`}
               >
@@ -115,9 +120,9 @@ export default function NotificationCenter() {
               </button>
               <button
                 onClick={() => setActiveTab('unread')}
-                className={`pb-2 border-b-2 font-medium transition-colors ${
+                className={`pb-2.5 border-b-2 transition-colors cursor-pointer ${
                   activeTab === 'unread'
-                    ? 'border-brand text-brand-glow font-semibold'
+                    ? 'border-[#0085db] text-[#0085db]'
                     : 'border-transparent text-inksoft hover:text-ink'
                 }`}
               >
@@ -125,7 +130,8 @@ export default function NotificationCenter() {
               </button>
             </div>
 
-            <div className="max-h-[320px] overflow-y-auto divide-y divide-line/40">
+            {/* Notification Items List */}
+            <div className="max-h-[320px] overflow-y-auto divide-y divide-line/60">
               <AnimatePresence initial={false}>
                 {filtered.length === 0 ? (
                   <motion.div
@@ -133,7 +139,7 @@ export default function NotificationCenter() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="p-8 text-center text-xs text-inksoft"
+                    className="p-8 text-center text-xs text-inksoft font-medium"
                   >
                     No notifications to display
                   </motion.div>
@@ -146,21 +152,23 @@ export default function NotificationCenter() {
                       animate="animate"
                       exit="exit"
                       onClick={() => handleNotificationClick(item)}
-                      className={`p-3 flex items-start gap-3 cursor-pointer transition-colors ${
-                        item.unread ? 'bg-brand/5 hover:bg-brand/10' : 'hover:bg-obsidian-800/40'
+                      className={`p-3.5 flex items-start gap-3 cursor-pointer transition-colors ${
+                        item.unread 
+                          ? 'bg-sky-50/50 hover:bg-sky-50 dark:bg-sky-950/20 dark:hover:bg-sky-950/40' 
+                          : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
                       }`}
                     >
                       {typeIcons[item.type] || typeIcons.system}
                       <div className="flex-1 min-w-0">
-                        <p className={`text-xs leading-snug ${item.unread ? 'text-ink font-semibold' : 'text-inksoft'}`}>
+                        <p className={`text-xs leading-relaxed ${item.unread ? 'text-ink font-bold' : 'text-inksoft font-medium'}`}>
                           {item.title}
                         </p>
-                        <span className="text-[10px] font-mono text-inksoft/70 mt-1 block">
+                        <span className="text-[11px] text-inksoft/80 mt-1 block font-medium">
                           {item.time}
                         </span>
                       </div>
                       {item.unread && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-brand-glow flex-none mt-1.5" />
+                        <span className="w-2 h-2 rounded-full bg-[#0085db] flex-none mt-1.5" />
                       )}
                     </motion.div>
                   ))
@@ -168,15 +176,16 @@ export default function NotificationCenter() {
               </AnimatePresence>
             </div>
 
-            <div className="p-2.5 bg-obsidian-800/80 border-t border-line text-center">
+            {/* Footer */}
+            <div className="p-3 bg-slate-50/70 dark:bg-slate-800/40 border-t border-line text-center">
               <button
                 onClick={() => {
                   navigate('/alerts')
                   setIsOpen(false)
                 }}
-                className="text-xs text-brand-glow hover:underline font-semibold"
+                className="text-xs text-[#0085db] hover:underline font-bold transition-all cursor-pointer"
               >
-                View all operational exceptions →
+                View all operational alerts →
               </button>
             </div>
           </motion.div>

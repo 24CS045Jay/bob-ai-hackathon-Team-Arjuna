@@ -3,37 +3,70 @@
 @tailwind utilities;
 
 :root {
-  /* Light Theme (Single Source of Truth, SaaS ERP Palette, No Orange!) */
-  --color-obsidian-900: 247 249 252;  /* #F7F9FC - Soft canvas background */
+  /* MaterialM Light Theme */
+  --color-obsidian-900: 244 246 249;  /* #F4F6F9 - MaterialM canvas background */
   --color-obsidian-800: 255 255 255;  /* #FFFFFF - Pure crisp white card surface */
-  --color-obsidian-700: 241 245 249;  /* #F1F5F9 - Elevated panel / active pill */
-  --color-obsidian-600: 231 234 240;  /* #E7EAF0 - Crisp border */
-  --color-line-rgb: 231 234 240;      /* #E7EAF0 */
+  --color-obsidian-700: 235 243 254;  /* #EBF3FE - MaterialM active pill tint */
+  --color-obsidian-600: 229 234 238;  /* #E5EAEE - Hairline card border */
+  --color-line-rgb: 229 234 238;      /* #E5EAEE */
   --color-line-alpha: 0.95;
   --color-line-soft-rgb: 241 245 249;
   --color-line-soft-alpha: 1.0;
-  --color-ink-rgb: 15 23 42;          /* #0F172A - Primary text */
-  --color-inksoft-rgb: 91 101 119;    /* #5B6577 - Secondary text */
-  --color-brand-rgb: 2 132 199;       /* #0284C7 - Base accent blue */
-  --color-brand-deep-rgb: 3 105 161;  /* #0369A1 - Cobalt blue */
-  --color-brand-glow-rgb: 14 165 233; /* #0EA5E9 - Sky blue */
-  --color-amber-rgb: 2 132 199;       /* Mapped to oceanic azure (NO ORANGE!) */
-  --color-crit-rgb: 225 29 72;        /* Crimson */
-  --color-ok-rgb: 16 185 129;         /* Emerald green */
+  --color-ink-rgb: 42 53 71;          /* #2A3547 - MaterialM Primary text */
+  --color-inksoft-rgb: 90 107 130;    /* #5A6A82 - MaterialM Secondary text */
+  --color-brand-rgb: 0 133 219;       /* #0085db - MaterialM Primary Blue */
+  --color-brand-deep-rgb: 0 116 194;  /* #0074c2 - MaterialM Blue Dark */
+  --color-brand-glow-rgb: 0 161 255;  /* #00A1FF - Vivid Sky */
+  --color-amber-rgb: 255 174 31;      /* #FFAE1F - MaterialM Warning */
+  --color-crit-rgb: 250 137 107;      /* #FA896B - MaterialM Coral / Danger */
+  --color-ok-rgb: 19 222 185;         /* #13DEB9 - MaterialM Mint / Success */
 
-  --bg-app: #F7F9FC;
-  --text-app: #0F172A;
+  --bg-app: #F4F6F9;
+  --text-app: #2A3547;
   --glass-bg: #FFFFFF;
-  --glass-border: #E7EAF0;
-  --glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --glass-border: #E5EAEE;
+  --glass-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   --glass-strong-bg: #FFFFFF;
-  --glass-strong-border: #CBD5E1;
-  --glass-strong-shadow: 0 10px 25px -3px rgba(15, 23, 42, 0.04), 0 4px 6px -2px rgba(15, 23, 42, 0.02);
-  --scrollbar-thumb: rgba(2, 132, 199, 0.2);
+  --glass-strong-border: #E5EAEE;
+  --glass-strong-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  --scrollbar-thumb: rgba(0, 133, 219, 0.25);
   --map-land: #E2E8F0;
   --map-pier: #CBD5E1;
   --map-block: #E2E8F0;
-  --map-water: #F0F5FA;
+  --map-water: #EBF3FE;
+}
+
+/* MaterialM Dark Theme (as seen in Image 3) */
+html.dark, [data-theme="dark"] {
+  --color-obsidian-900: 17 28 45;     /* #111c2d - Deep navy canvas */
+  --color-obsidian-800: 23 35 55;     /* #172337 - Card surface */
+  --color-obsidian-700: 34 51 77;     /* #22334d - Active pill / elevate */
+  --color-obsidian-600: 42 62 92;     /* #2a3e5c - Dark border */
+  --color-line-rgb: 34 51 77;
+  --color-line-alpha: 0.9;
+  --color-line-soft-rgb: 42 62 92;
+  --color-line-soft-alpha: 0.8;
+  --color-ink-rgb: 226 232 240;       /* Slate 200 */
+  --color-inksoft-rgb: 148 163 184;   /* Slate 400 */
+  --color-brand-rgb: 0 133 219;
+  --color-brand-deep-rgb: 0 116 194;
+  --color-brand-glow-rgb: 0 161 255;
+  --color-amber-rgb: 255 174 31;
+  --color-crit-rgb: 250 137 107;
+  --color-ok-rgb: 19 222 185;
+
+  --bg-app: #111c2d;
+  --text-app: #E2E8F0;
+  --glass-bg: #172337;
+  --glass-border: #22334d;
+  --glass-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
+  --glass-strong-bg: #172337;
+  --glass-strong-border: #22334d;
+  --glass-strong-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  --map-land: #1E293B;
+  --map-pier: #334155;
+  --map-block: #1E293B;
+  --map-water: #0F172A;
 }
 
 html, body, #root {
