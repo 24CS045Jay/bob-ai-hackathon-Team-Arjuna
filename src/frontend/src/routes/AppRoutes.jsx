@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import LandingPage from '../pages/LandingPage.jsx'
+import LoginPage from '../pages/LoginPage.jsx'
 import DashboardPage from '../pages/DashboardPage.jsx'
 import CongestionPage from '../pages/CongestionPage.jsx'
 import RoutingPage from '../pages/RoutingPage.jsx'
@@ -38,13 +39,21 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route
-          path="/"
-          element={
-            <PageWrapper>
-              <LandingPage />
-            </PageWrapper>
-          }
-        />
+        path="/"
+        element={
+          <PageWrapper>
+            <LandingPage />
+          </PageWrapper>
+        }
+      />
+      <Route
+        path="/login"
+        element={
+          <PageWrapper>
+            <LoginPage />
+          </PageWrapper>
+        }
+      />
         <Route
           path="/dashboard"
           element={

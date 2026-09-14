@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useOperationalContext } from '../../context/OperationalContext.jsx'
 import { useRole } from '../../context/RoleContext.jsx'
@@ -23,7 +23,7 @@ function CountUpValue({ value }) {
   useEffect(() => {
     const startNum = 0
     const endNum = number
-    const durationMs = 600
+    const durationMs = 650
     const startTime = performance.now()
 
     let animationFrameId
@@ -70,89 +70,112 @@ export default function KpiRow() {
   const berthPct = Math.round((occupiedBerths / totalBerths) * 100)
   const peakCongestion = hotspotData?.hotspots?.[0]?.predicted_congestion_index || 81.6
 
+  // 4 Pastel Stat Cards strictly matching MaterialM Screenshot 2
   const cards = [
     {
-      title: 'Total Inbound Vessels',
-      value: `${activeVesselsCount}`,
-      subtext: 'vs last shift 12',
-      trend: '+10.8%',
+      title: 'Total Crane Moves',
+      value: '34.8',
+      suffix: ' GMPH',
+      subtext: 'vs 32.0 SLA benchmark',
+      trend: '+14.6%',
       trendPositive: true,
+      iconBg: 'bg-[#FEF5E5] text-[#FFAE1F] dark:bg-amber-950/40 dark:text-amber-300',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+          <polyline points="17 6 23 6 23 12" />
+        </svg>
+      ),
     },
     {
-      title: 'Active Berth Occupancy',
-      value: `${berthPct}%`,
-      subtext: `vs capacity ${totalBerths} berths`,
-      trend: '+16.8%',
-      trendPositive: true,
-    },
-    {
-      title: 'Peak Congestion (Zone B)',
+      title: 'Peak Congestion',
       value: `${peakCongestion}%`,
-      subtext: 'vs nominal 45.0%',
-      trend: '+12.9%',
+      subtext: 'Zone B active hotspot',
+      trend: '+9.2%',
       trendPositive: false,
-      isBrandPill: true,
+      iconBg: 'bg-[#FDEDE8] text-[#FA896B] dark:bg-rose-950/40 dark:text-rose-300',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+      ),
     },
     {
-      title: 'Net Crane Moves / Hr',
-      value: '92',
-      suffix: ' moves/h',
-      subtext: 'vs target 80 moves',
-      trend: '+10.8%',
+      title: 'Active Fleet Lineup',
+      value: `${activeVesselsCount}`,
+      suffix: ' Vessels',
+      subtext: '45.1k TEU underway',
+      trend: '+12.5%',
       trendPositive: true,
+      iconBg: 'bg-[#E6FFFA] text-[#13DEB9] dark:bg-emerald-950/40 dark:text-emerald-300',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      ),
+    },
+    {
+      title: 'Demurrage Incurred',
+      value: '$0.00',
+      subtext: '72h rolling window zero risk',
+      trend: '-16.3%',
+      trendPositive: true,
+      iconBg: 'bg-[#EBF3FE] text-[#0085db] dark:bg-sky-950/40 dark:text-sky-300',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 6v6l4 2" />
+        </svg>
+      ),
     },
   ]
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
       {cards.map((c, idx) => (
         <motion.div
           key={idx}
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25, delay: idx * 0.05 }}
-          className="glass-strong rounded-2xl p-5 border border-line flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden group"
+          className="bg-surface rounded-2xl p-5 border border-line shadow-card hover:shadow-card-hover transition-all flex items-center justify-between"
         >
-          {/* Top Title & 3-dot action */}
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-inksoft">{c.title}</span>
-            <button
-              title="Card options"
-              className="text-inksoft hover:text-ink p-1 rounded-lg hover:bg-obsidian-700/60 transition-colors"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <circle cx="12" cy="5" r="1" />
-                <circle cx="12" cy="12" r="1" />
-                <circle cx="12" cy="19" r="1" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Big Bold KPI Number (Image 1 style) */}
-          <div className="mt-3.5 mb-3">
-            <div className="text-2xl sm:text-3xl font-extrabold text-ink tracking-tight font-sans">
+          {/* Left: Metric Info */}
+          <div>
+            <span className="text-xs font-semibold text-inksoft block mb-1.5">{c.title}</span>
+            <div className="text-2xl sm:text-[26px] font-bold text-ink tracking-tight font-sans leading-none">
               <CountUpValue value={c.value} />
-              {c.suffix && <span className="text-xs font-medium text-inksoft ml-1 font-mono">{c.suffix}</span>}
+              {c.suffix && <span className="text-xs font-medium text-inksoft ml-1">{c.suffix}</span>}
+            </div>
+            <div className="flex items-center gap-2 mt-3">
+              <span
+                className={`inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-full text-[11px] ${
+                  c.trendPositive
+                    ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400'
+                    : 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400'
+                }`}
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  {c.trendPositive ? (
+                    <polyline points="18 15 12 9 6 15" />
+                  ) : (
+                    <polyline points="6 9 12 15 18 9" />
+                  )}
+                </svg>
+                {c.trend}
+              </span>
+              <span className="text-[11px] text-inksoft truncate max-w-[120px]">{c.subtext}</span>
             </div>
           </div>
 
-          {/* Bottom Subtitle & Trend Badge */}
-          <div className="flex items-center justify-between pt-1 text-xs">
-            <span className="text-inksoft/80 font-medium text-[11.5px]">{c.subtext}</span>
-            <span
-              className={`flex items-center gap-1 font-semibold px-2 py-0.5 rounded-full text-[11px] font-mono ${
-                c.isBrandPill
-                  ? 'bg-brand/10 text-brand border border-brand/20'
-                  : c.trendPositive
-                  ? 'bg-ok/10 text-ok border border-ok/20'
-                  : 'bg-crit/10 text-crit border border-crit/20'
-              }`}
-            >
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                <polyline points="18 15 12 9 6 15" />
-              </svg>
-              {c.trend}
-            </span>
+          {/* Right: Pastel Squircle Icon (MaterialM Signature) */}
+          <div className={`w-13 h-13 rounded-2xl flex items-center justify-center p-3.5 shrink-0 ${c.iconBg}`}>
+            {c.icon}
           </div>
         </motion.div>
       ))}

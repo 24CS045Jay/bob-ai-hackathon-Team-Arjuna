@@ -51,9 +51,9 @@ export default function OceanAnimation() {
         }}
       />
 
-      {/* Subtle bottom & top edge vignetting */}
-      <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-obsidian-900 via-obsidian-900/80 to-transparent" />
-      <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-obsidian-900/80 via-obsidian-900/30 to-transparent" />
+      {/* Subtle bottom & top edge vignetting matching deep maritime ocean footage */}
+      <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#060E18] via-[#060E18]/80 to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#060E18]/80 via-[#060E18]/30 to-transparent" />
     </div>
   )
 }

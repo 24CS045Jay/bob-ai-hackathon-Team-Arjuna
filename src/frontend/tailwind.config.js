@@ -11,12 +11,29 @@ function withAlpha(variableName, defaultAlpha = 1) {
 
 export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        canvas: '#F7F9FC',
+        canvas: '#F4F6F9',
         surface: '#FFFFFF',
-        cardBorder: '#E7EAF0',
+        cardBorder: '#E5EAEE',
+        materialm: {
+          brand: '#0085db',
+          brandHover: '#0074c2',
+          brandLight: '#EBF3FE',
+          mint: '#13DEB9',
+          mintLight: '#E6FFFA',
+          coral: '#FA896B',
+          coralLight: '#FDEDE8',
+          purple: '#7352FF',
+          purpleLight: '#F2EEFF',
+          amber: '#FFAE1F',
+          amberLight: '#FEF5E5',
+          darkBg: '#111c2d',
+          darkCard: '#172337',
+          darkBorder: '#22334d'
+        },
         obsidian: {
           DEFAULT: withAlpha('--color-obsidian-900'),
           900: withAlpha('--color-obsidian-900'),
