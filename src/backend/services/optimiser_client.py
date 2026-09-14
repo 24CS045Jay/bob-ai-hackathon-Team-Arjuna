@@ -3,20 +3,19 @@ PortFlow AI — Optimization Service Client
 Wraps berth assignment, crane scheduling, and channel routing solvers with DB fallback.
 """
 
+import sys
+from pathlib import Path
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 
-try:
-    from ...optimisation.berth_assignment import optimize_berth_assignments, CANONICAL_BERTHS
-    from ...optimisation.crane_assignment import optimize_crane_assignments, CANONICAL_CRANES
-    from ...optimisation.routing import plan_vessel_route, WAYPOINTS
-except (ImportError, ValueError):
-    try:
-        from src.optimisation.berth_assignment import optimize_berth_assignments, CANONICAL_BERTHS
-        from src.optimisation.crane_assignment import optimize_crane_assignments, CANONICAL_CRANES
-        from src.optimisation.routing import plan_vessel_route, WAYPOINTS
-    except (ImportError, ValueError):
-        pass
+# Ensure optimisation/ package is importable regardless of working directory.
+_SRC_DIR = Path(__file__).resolve().parent.parent.parent   # .../src/
+if str(_SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(_SRC_DIR))
+
+from optimisation.berth_assignment import optimize_berth_assignments, CANONICAL_BERTHS
+from optimisation.crane_assignment import optimize_crane_assignments, CANONICAL_CRANES
+from optimisation.routing import plan_vessel_route, WAYPOINTS
 
 from ..db.models import VesselModel, BerthModel, CraneModel
 
