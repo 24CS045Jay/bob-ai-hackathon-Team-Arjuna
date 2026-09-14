@@ -9,6 +9,7 @@ export default function Sidebar({ isOpen = false, onToggle }) {
   const { activeRole, setIsCommandPaletteOpen, setIsAuditLogOpen } = useRole()
   const location = useLocation()
   const [isHovered, setIsHovered] = useState(false)
+  const [isPinned, setIsPinned] = useState(false)
   const hoverTimerRef = useRef(null)
 
   const handleMouseEnter = () => {
@@ -17,18 +18,19 @@ export default function Sidebar({ isOpen = false, onToggle }) {
   }
 
   const handleMouseLeave = () => {
+    if (isPinned) return
     hoverTimerRef.current = setTimeout(() => {
       setIsHovered(false)
     }, 180)
   }
 
   const handleNavClick = () => {
-    if (!isOpen) {
+    if (!isOpen && !isPinned) {
       setIsHovered(false)
     }
   }
 
-  // Navigation Items matching MaterialM template structure
+  // Navigation Items
   const dashboards = [
     {
       to: '/dashboard',
@@ -68,6 +70,20 @@ export default function Sidebar({ isOpen = false, onToggle }) {
           <line x1="18" y1="20" x2="18" y2="10" />
           <line x1="12" y1="20" x2="12" y2="4" />
           <line x1="6" y1="20" x2="6" y2="14" />
+        </svg>
+      ),
+    },
+    {
+      to: '/world-map',
+      title: 'World Port Map',
+      code: 'world-map',
+      badge: 'New',
+      badgeColor: 'bg-teal-50 text-teal-600 dark:bg-teal-950/40 dark:text-teal-300',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="2" y1="12" x2="22" y2="12" />
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
         </svg>
       ),
     },
@@ -144,6 +160,20 @@ export default function Sidebar({ isOpen = false, onToggle }) {
         </svg>
       ),
     },
+    {
+      to: '/datasheet',
+      title: 'Ship & Cargo Data',
+      code: 'datasheet',
+      badge: 'CRUD',
+      badgeColor: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-300',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <ellipse cx="12" cy="5" rx="9" ry="3" />
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+        </svg>
+      ),
+    },
   ]
 
   const systemItems = [
@@ -173,36 +203,43 @@ export default function Sidebar({ isOpen = false, onToggle }) {
     },
   ]
 
-  // Primary rail icon items
+  // Primary rail icon items (all items)
   const railIcons = [
     { to: '/dashboard', label: 'Dashboard', icon: dashboards[0].icon },
     { to: '/vessels', label: 'Fleet AIS', icon: dashboards[1].icon },
     { to: '/congestion', label: 'Congestion AI', icon: dashboards[2].icon },
+    { to: '/world-map', label: 'World Port Map', icon: dashboards[3].icon },
     { to: '/berths', label: 'Berth Operations', icon: portOperations[0].icon },
     { to: '/routing', label: 'Channel Routing', icon: portOperations[1].icon },
     { to: '/gates', label: 'Gate Logistics', icon: portOperations[2].icon },
     { to: '/simulation', label: 'Scenarios', icon: portOperations[4].icon },
     { to: '/plan', label: '72h Matrix', icon: portOperations[5].icon },
+    { to: '/datasheet', label: 'Ship & Cargo Data', icon: portOperations[6].icon },
   ]
 
-  const isExpanded = isOpen || isHovered
+  const isExpanded = isOpen || isHovered || isPinned
+
+  const allGroups = [
+    { label: 'Dashboards', items: dashboards },
+    { label: 'Port Operations', items: portOperations },
+    { label: 'System', items: systemItems },
+  ]
 
   return (
-    <aside 
+    <aside
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className="relative flex select-none z-30 shrink-0"
     >
-      {/* 1. Leftmost Mini Icon Rail (MaterialM signature ~70px wide) */}
-      <div className="w-[68px] sm:w-[72px] bg-surface border-r border-line flex flex-col items-center justify-between py-4 z-20 shrink-0 shadow-[1px_0_4px_rgba(0,0,0,0.02)]">
-        {/* MaterialM Brand Emblem */}
-        <div className="flex flex-col items-center gap-6">
+      {/* 1. Leftmost Mini Icon Rail (~72px wide) */}
+      <div className="w-[68px] sm:w-[72px] bg-surface border-r border-line flex flex-col items-center justify-between py-4 z-20 shrink-0 shadow-[1px_0_4px_rgba(0,0,0,0.04)]">
+        {/* Brand Emblem */}
+        <div className="flex flex-col items-center gap-4">
           <NavLink
             to="/"
             title="Tideline Maritime OS"
             className="w-10 h-10 rounded-2xl flex items-center justify-center hover:scale-105 transition-transform"
           >
-            {/* Curved M logo matching MaterialM */}
             <svg width="36" height="36" viewBox="0 0 38 38" fill="none">
               <rect width="38" height="38" rx="12" fill="#0085db" fillOpacity="0.12" />
               <path d="M11 25V14L19 22L27 14V25" stroke="#0085db" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
@@ -210,15 +247,36 @@ export default function Sidebar({ isOpen = false, onToggle }) {
             </svg>
           </NavLink>
 
+          {/* Pin / Stick button */}
+          <Tooltip text={isPinned ? 'Unpin sidebar' : 'Pin sidebar open'} position="right">
+            <button
+              onClick={() => {
+                setIsPinned((v) => !v)
+                if (!isPinned) setIsHovered(true)
+              }}
+              className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all border ${
+                isPinned
+                  ? 'bg-sky-100 dark:bg-sky-900/40 border-sky-300 dark:border-sky-700 text-[#0085db]'
+                  : 'border-line text-inksoft hover:text-[#0085db] hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+              title={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill={isPinned ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2v6l3 3-3 3v6" />
+                <path d="M5 9h14" />
+              </svg>
+            </button>
+          </Tooltip>
+
           {/* Quick Icons Stack */}
-          <div className="flex flex-col gap-1.5 items-center">
+          <div className="flex flex-col gap-1 items-center">
             {railIcons.map((item, idx) => {
               const isActive = location.pathname === item.to
               return (
                 <Tooltip key={idx} text={item.label} position="right">
                   <NavLink
                     to={item.to}
-                    className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all ${
+                    className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${
                       isActive
                         ? 'bg-sky-100 text-[#0085db] dark:bg-sky-900/40 dark:text-sky-300 font-bold shadow-xs'
                         : 'text-inksoft hover:text-[#0085db] hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -232,7 +290,7 @@ export default function Sidebar({ isOpen = false, onToggle }) {
           </div>
         </div>
 
-        {/* Bottom Rail User Profile Avatar */}
+        {/* Bottom Rail User Avatar */}
         <div className="relative group">
           <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-[#0085db] text-white font-bold flex items-center justify-center text-xs shadow-sm cursor-pointer hover:scale-105 transition-transform">
             {activeRole?.initials || 'AJ'}
@@ -241,7 +299,7 @@ export default function Sidebar({ isOpen = false, onToggle }) {
         </div>
       </div>
 
-      {/* 2. Secondary Sub-Navigation Rail (Slides out smoothly from left to right on hover or when pinned) */}
+      {/* 2. Secondary Sub-Navigation Rail */}
       <AnimatePresence initial={false}>
         {isExpanded && (
           <motion.div
@@ -250,122 +308,74 @@ export default function Sidebar({ isOpen = false, onToggle }) {
             exit={{ x: -20, opacity: 0 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className={
-              isOpen
-                ? "w-[226px] overflow-hidden bg-surface border-r border-line flex flex-col justify-between py-4 px-3 shrink-0"
-                : "absolute left-[68px] sm:left-[72px] top-0 bottom-0 h-full w-[236px] z-50 bg-surface border-r border-line flex flex-col justify-between py-4 px-3 shadow-[12px_0_36px_rgba(0,0,0,0.12)] dark:shadow-[12px_0_36px_rgba(0,0,0,0.45)] overflow-hidden"
+              isPinned || isOpen
+                ? 'w-[230px] overflow-hidden bg-surface border-r border-line flex flex-col justify-between py-4 px-3 shrink-0'
+                : 'absolute left-[68px] sm:left-[72px] top-0 bottom-0 h-full w-[240px] z-50 bg-surface border-r border-line flex flex-col justify-between py-4 px-3 shadow-[12px_0_36px_rgba(0,0,0,0.12)] dark:shadow-[12px_0_36px_rgba(0,0,0,0.45)] overflow-hidden'
             }
           >
-            <div className="space-y-5 overflow-y-auto pr-1">
-              {/* MaterialM Logo Title Row */}
+            <div className="space-y-4 overflow-y-auto pr-1 flex-1">
+              {/* Title Row */}
               <div className="px-3 pt-1 pb-1 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="font-extrabold text-base text-ink tracking-tight">MaterialM</span>
+                  <span className="font-extrabold text-base text-ink tracking-tight">PortFlow</span>
                   <span className="text-[10px] uppercase font-bold text-[#0085db] bg-sky-100 dark:bg-sky-900/40 px-2 py-0.5 rounded-full">TOS</span>
                 </div>
+                {/* Pin toggle in expanded panel */}
+                <Tooltip text={isPinned ? 'Unpin sidebar' : 'Pin sidebar open'} position="left">
+                  <button
+                    onClick={() => setIsPinned((v) => !v)}
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all border text-xs ${
+                      isPinned
+                        ? 'bg-sky-100 dark:bg-sky-900/40 border-sky-300 dark:border-sky-700 text-[#0085db]'
+                        : 'border-line text-inksoft hover:text-[#0085db] hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill={isPinned ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2v6l3 3-3 3v6" />
+                      <path d="M5 9h14" />
+                    </svg>
+                  </button>
+                </Tooltip>
               </div>
 
-              {/* Group 1: Dashboards */}
-              <div>
-                <span className="text-[11px] font-bold text-inksoft uppercase tracking-wider px-3 mb-2 block">
-                  Dashboards
-                </span>
-                <div className="space-y-1">
-                  {dashboards.map((item) => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      onClick={handleNavClick}
-                      className={({ isActive }) =>
-                        `px-3 py-2 rounded-2xl flex items-center justify-between text-xs transition-all ${
-                          isActive
-                            ? 'bg-[#EBF3FE] text-[#0085db] dark:bg-sky-950/50 dark:text-sky-300 font-semibold shadow-xs'
-                            : 'text-inksoft hover:text-ink hover:bg-slate-100 dark:hover:bg-slate-800 font-medium'
-                        }`
-                      }
-                    >
-                      <div className="flex items-center gap-2.5 truncate">
-                        <span className="shrink-0">{item.icon}</span>
-                        <span className="truncate">{item.title}</span>
-                      </div>
-                      {item.badge && (
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${item.badgeColor}`}>
-                          {item.badge}
-                        </span>
-                      )}
-                    </NavLink>
-                  ))}
+              {/* Nav Groups */}
+              {allGroups.map((group) => (
+                <div key={group.label}>
+                  <span className="text-[11px] font-bold text-inksoft uppercase tracking-wider px-3 mb-2 block">
+                    {group.label}
+                  </span>
+                  <div className="space-y-0.5">
+                    {group.items.map((item) => (
+                      <NavLink
+                        key={item.to}
+                        to={item.to}
+                        onClick={handleNavClick}
+                        className={({ isActive }) =>
+                          `px-3 py-2 rounded-xl flex items-center justify-between text-xs transition-all ${
+                            isActive
+                              ? 'bg-[#EBF3FE] text-[#0085db] dark:bg-sky-950/50 dark:text-sky-300 font-semibold shadow-xs'
+                              : 'text-inksoft hover:text-ink hover:bg-slate-100 dark:hover:bg-slate-800 font-medium'
+                          }`
+                        }
+                      >
+                        <div className="flex items-center gap-2.5 truncate">
+                          <span className="shrink-0">{item.icon}</span>
+                          <span className="truncate">{item.title}</span>
+                        </div>
+                        {item.badge && (
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${item.badgeColor}`}>
+                            {item.badge}
+                          </span>
+                        )}
+                      </NavLink>
+                    ))}
+                  </div>
                 </div>
-              </div>
-
-              {/* Group 2: Port Operations */}
-              <div>
-                <span className="text-[11px] font-bold text-inksoft uppercase tracking-wider px-3 mb-2 block">
-                  Port Operations
-                </span>
-                <div className="space-y-1">
-                  {portOperations.map((item) => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      onClick={handleNavClick}
-                      className={({ isActive }) =>
-                        `px-3 py-2 rounded-2xl flex items-center justify-between text-xs transition-all ${
-                          isActive
-                            ? 'bg-[#EBF3FE] text-[#0085db] dark:bg-sky-950/50 dark:text-sky-300 font-semibold shadow-xs'
-                            : 'text-inksoft hover:text-ink hover:bg-slate-100 dark:hover:bg-slate-800 font-medium'
-                        }`
-                      }
-                    >
-                      <div className="flex items-center gap-2.5 truncate">
-                        <span className="shrink-0">{item.icon}</span>
-                        <span className="truncate">{item.title}</span>
-                      </div>
-                      {item.badge && (
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${item.badgeColor}`}>
-                          {item.badge}
-                        </span>
-                      )}
-                    </NavLink>
-                  ))}
-                </div>
-              </div>
-
-              {/* Group 3: System & Security */}
-              <div>
-                <span className="text-[11px] font-bold text-inksoft uppercase tracking-wider px-3 mb-2 block">
-                  System
-                </span>
-                <div className="space-y-1">
-                  {systemItems.map((item) => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      onClick={handleNavClick}
-                      className={({ isActive }) =>
-                        `px-3 py-2 rounded-2xl flex items-center justify-between text-xs transition-all ${
-                          isActive
-                            ? 'bg-[#EBF3FE] text-[#0085db] dark:bg-sky-950/50 dark:text-sky-300 font-semibold shadow-xs'
-                            : 'text-inksoft hover:text-ink hover:bg-slate-100 dark:hover:bg-slate-800 font-medium'
-                        }`
-                      }
-                    >
-                      <div className="flex items-center gap-2.5 truncate">
-                        <span className="shrink-0">{item.icon}</span>
-                        <span className="truncate">{item.title}</span>
-                      </div>
-                      {item.badge && (
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${item.badgeColor}`}>
-                          {item.badge}
-                        </span>
-                      )}
-                    </NavLink>
-                  ))}
-                </div>
-              </div>
+              ))}
             </div>
 
-            {/* Bottom Terminal Operational Status Card */}
-            <div className="mt-3 p-3 bg-gradient-to-tr from-sky-50 to-indigo-50/40 dark:from-slate-800/80 dark:to-slate-800/30 rounded-2xl border border-sky-100 dark:border-slate-700/60">
+            {/* Bottom Terminal Status Card */}
+            <div className="mt-3 p-3 bg-gradient-to-tr from-sky-50 to-indigo-50/40 dark:from-slate-800/80 dark:to-slate-800/30 rounded-2xl border border-sky-100 dark:border-slate-700/60 shrink-0">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[11px] font-bold text-ink">Duty Station</span>
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />

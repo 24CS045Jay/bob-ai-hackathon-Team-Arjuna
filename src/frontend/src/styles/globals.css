@@ -176,3 +176,153 @@ body, div, aside, header, nav, section, main, footer, button, input, select, tab
     scroll-behavior: auto !important;
   }
 }
+
+/* ── Typography & Text Overflow Fixes ────────────────────────────────── */
+
+/* Prevent any heading or label from escaping its container */
+h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+/* Paragraph / body text should wrap naturally */
+p, li {
+  overflow-wrap: break-word;
+}
+
+/* Main content area should never exceed viewport width */
+main {
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+/* Every flex/grid child should be allowed to shrink */
+.flex > *, .grid > * {
+  min-width: 0;
+}
+
+/* Page header descriptions should not overflow */
+.page-description {
+  max-width: 680px;
+  line-height: 1.65;
+}
+
+/* Topbar crumb text should truncate instead of pushing out */
+.topbar-crumb {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 280px;
+}
+
+/* ── Leaflet Map Overrides ──────────────────────────────────────────── */
+
+/* Ensure Leaflet map sits inside rounded containers */
+.leaflet-container {
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif !important;
+  border-radius: inherit;
+  background: #e8edf2;
+}
+
+/* Suppress default Leaflet focus outline rings that cause visual bleed */
+.leaflet-container:focus {
+  outline: none;
+}
+
+/* Leaflet tooltip styling */
+.leaflet-tooltip {
+  background: #ffffff !important;
+  border: 1px solid #e5eaee !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1) !important;
+  padding: 8px 10px !important;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif !important;
+  font-size: 11.5px !important;
+  color: #2A3547 !important;
+}
+
+.leaflet-tooltip::before {
+  border-top-color: #e5eaee !important;
+}
+
+/* Leaflet popup */
+.leaflet-popup-content-wrapper {
+  border-radius: 14px !important;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.14) !important;
+  border: 1px solid #e5eaee !important;
+  padding: 0 !important;
+}
+
+.leaflet-popup-content {
+  margin: 12px 14px !important;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif !important;
+}
+
+.leaflet-popup-tip {
+  background: #ffffff !important;
+}
+
+/* Zoom controls */
+.leaflet-control-zoom {
+  border: 1px solid #e5eaee !important;
+  border-radius: 10px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+  overflow: hidden;
+}
+
+.leaflet-control-zoom a {
+  background: #ffffff !important;
+  color: #2A3547 !important;
+  border: none !important;
+  font-size: 16px !important;
+  line-height: 28px !important;
+  width: 28px !important;
+  height: 28px !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: #f1f5f9 !important;
+}
+
+/* Fix Leaflet z-index layering inside modals */
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container,
+.leaflet-map-pane svg,
+.leaflet-map-pane canvas,
+.leaflet-zoom-box,
+.leaflet-image-layer,
+.leaflet-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+/* Dark mode Leaflet adjustments */
+html.dark .leaflet-tooltip {
+  background: #172337 !important;
+  border-color: #22334d !important;
+  color: #e2e8f0 !important;
+}
+
+html.dark .leaflet-popup-content-wrapper {
+  background: #172337 !important;
+  border-color: #22334d !important;
+  color: #e2e8f0 !important;
+}
+
+html.dark .leaflet-popup-tip {
+  background: #172337 !important;
+}
+
+html.dark .leaflet-control-zoom a {
+  background: #172337 !important;
+  color: #e2e8f0 !important;
+}
+
+html.dark .leaflet-control-zoom a:hover {
+  background: #22334d !important;
+}
