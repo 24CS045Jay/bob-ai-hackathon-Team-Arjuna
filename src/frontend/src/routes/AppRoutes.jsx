@@ -13,6 +13,8 @@ import SimulationPage from '../pages/SimulationPage.jsx'
 import PlanPage from '../pages/PlanPage.jsx'
 import AlertsPage from '../pages/AlertsPage.jsx'
 import AccessControlPage from '../pages/AccessControlPage.jsx'
+import DatasheetPage from '../pages/DatasheetPage.jsx'
+import WorldMapPage from '../pages/WorldMapPage.jsx'
 import ProtectedRoute from './ProtectedRoute.jsx'
 import {
   pageTransitionVariants,
@@ -160,6 +162,26 @@ export default function AppRoutes() {
             <PageWrapper>
               <ProtectedRoute requiredPermission="manageUsers">
                 <AccessControlPage />
+              </ProtectedRoute>
+            </PageWrapper>
+          }
+        />
+        <Route
+          path="/datasheet"
+          element={
+            <PageWrapper>
+              <ProtectedRoute>
+                <DatasheetPage />
+              </ProtectedRoute>
+            </PageWrapper>
+          }
+        />
+        <Route
+          path="/world-map"
+          element={
+            <PageWrapper>
+              <ProtectedRoute>
+                <WorldMapPage />
               </ProtectedRoute>
             </PageWrapper>
           }
