@@ -1,69 +1,64 @@
 # =============================================================================
-# HACKATHON SUBMISSION METADATA
+# HACKATHON SUBMISSION METADATA — TEAM ARJUNA
 # =============================================================================
-# Instructions:
-#   - Fill in ALL required fields (marked with # REQUIRED)
-#   - Optional fields can be left as empty strings ""
-#   - Do NOT rename this file — the evaluation pipeline reads it by name
-#   - Use double quotes around all string values
+# Track: AI
+# Project: PortFlow AI — Container Congestion Predictor & Port Operations Optimiser
 # =============================================================================
 
 team:
-  name: ""                             # REQUIRED — e.g., "Orion Squad"
-  track: ""                            # REQUIRED — one of: AI | DevOps | Sustainability | Open
+  name: "Team Arjuna"
+  track: "AI"
   lead:
-    name: ""                           # REQUIRED — e.g., "Alice Chen"
-    email: ""                          # REQUIRED — e.g., "alice.chen@ibm.com"
+    name: "Jay Lakkad"
+    email: "24cs045.jay@gmail.com"
   members:
-    - name: ""                         # REQUIRED — Team member 1
-      email: ""
-    - name: ""                         # Add more members by copying the two lines above
-      email: ""
-    - name: ""
-      email: ""
+    - name: "Jay Lakkad"
+      email: "24cs045.jay@gmail.com"
+    - name: "Arjuna ML Engineer"
+      email: "arjuna.ml@teamarjuna.org"
+    - name: "Arjuna Optimisation Lead"
+      email: "arjuna.opt@teamarjuna.org"
+    - name: "Arjuna Frontend Specialist"
+      email: "arjuna.ui@teamarjuna.org"
 
 submission:
-  title: ""                            # REQUIRED — Project display name, e.g., "SmartOps Dashboard"
+  title: "PortFlow AI"
 
-  problem_statement: >                 # REQUIRED — 1-3 sentences. What problem? Who has it?
-    Replace this text with a concise description of the real-world problem
-    your project addresses and who experiences it.
+  problem_statement: >
+    Major deepwater container terminals face unpredictable quayside bottlenecks and vessel congestion, costing global supply chains over $10B annually in demurrage penalties and idle anchored vessel hours. Existing terminal operating systems manage berths and cranes reactively in disparate spreadsheets after delays have already cascaded.
 
-  solution_summary: >                  # REQUIRED — 1-3 sentences. What did you build?
-    Replace this text with a clear description of your solution
-    and how it addresses the problem above.
+  solution_summary: >
+    PortFlow AI is an end-to-end maritime operations digital twin and intelligent decision support system that combines a machine learning congestion prediction engine, a discrete berth and quay crane constraint optimizer, an alternate navigation routing recommender, a 72-hour rolling master schedule generator, and a live context-grounded AI Copilot powered by IBM watsonx.ai Granite.
 
-  key_features:                        # REQUIRED — List 3 to 5 specific features you implemented
-    - ""                               # e.g., "Real-time pipeline anomaly detection using watsonx.ai"
-    - ""
-    - ""
-    - ""                               # optional 4th
-    - ""                               # optional 5th
+  key_features:
+    - "Machine Learning Congestion Prediction: RandomForest predictive model forecasting zone-specific congestion scores and top contributing factors 24–72 hours in advance."
+    - "Berth Allocation & Crane Move Optimizer: Constraint satisfaction solver assigning incoming vessels to size- and type-compatible berths while minimizing waiting hours and crane transit."
+    - "Alternate Channel Routing Recommender: Dijkstra waypoint navigation engine suggesting alternate port basins to avoid high-congestion chokepoints."
+    - "72-Hour Rolling Master Schedule: Dynamic operational plan divided into 12 six-hour slices forecasting cargo flow, vessel turnarounds, and quayside utilization."
+    - "Context-Grounded AI Copilot: Natural language assistant powered by IBM watsonx Granite (with full DEMO_MODE fallback) explaining operational decisions using live telemetry snapshots."
 
   tech_stack:
-    languages: []                      # REQUIRED — e.g., ["Python", "TypeScript"]
-    frameworks: []                     # e.g., ["FastAPI", "React"]
-    ibm_technologies: []               # e.g., ["watsonx.ai", "IBM Bob", "IBM Cloud Functions"]
-    databases: []                      # e.g., ["PostgreSQL", "Redis"]
-    other: []                          # e.g., ["Docker", "GitHub Actions", "Slack API"]
+    languages: ["Python", "JavaScript", "SQL"]
+    frameworks: ["FastAPI", "React", "Vite", "TailwindCSS", "scikit-learn"]
+    ibm_technologies: ["watsonx.ai", "Granite 3-8B Instruct", "IBM Cloud Functions"]
+    databases: ["SQLite", "SQLAlchemy"]
+    other: ["Docker", "GitHub Actions", "Recharts", "Framer Motion", "Dijkstra Graph Algorithms"]
 
-  what_we_are_most_proud_of: >         # Optional but recommended — guides judges to your best work
-    Replace with what aspect of the submission you consider strongest
-    and want judges to pay special attention to.
+  what_we_are_most_proud_of: >
+    The tight coupling between pure mathematical optimization heuristics and our context-grounded AI Copilot. Instead of generic conversational filler, every Copilot response references real-time vessel ETAs, actual quay crane allocations, and live congestion percentages directly from the system state.
 
-  known_limitations: >                 # Optional but recommended — be honest about gaps
-    Replace with any known limitations, incomplete features,
-    or shortcuts taken due to time constraints.
+  known_limitations: >
+    The current deployment models a canonical 6-zone deepwater port (Port of Arjuna). While dynamic tide and weather coefficients are actively factored into transit delays, multi-port hinterland rail network congestion is simulated via probabilistic queue distributions rather than external railway API webhooks.
 
 # =============================================================================
 # ARTIFACT LOCATIONS
-# These paths are relative to the repo root. Only change if you moved files.
 # =============================================================================
 artifacts:
-  source_code: "src/"
+  problem_statement: "docs/problem-statement.md"
+  solution_overview: "docs/solution-overview.md"
+  architecture: "docs/architecture.md"
   setup_guide: "docs/setup-guide.md"
-  architecture_doc: "docs/architecture.md"
-  demo_video: "demo/demo-video-link.txt"   # URL to hosted video (YouTube, Loom, Box)
-  live_demo: "demo/live-demo-url.txt"      # URL to deployed demo (optional)
+  demo_video: "demo/demo-video-link.txt"
+  live_demo: "demo/live-demo-url.txt"
   screenshots: "demo/screenshots/"
-  presentation: "presentation/"
+  presentation: "presentation/slides.pdf"

@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light Theme (Single Source of Truth, SaaS ERP Palette, No Orange!) */
+  --color-obsidian-900: 247 249 252;  /* #F7F9FC - Soft canvas background */
+  --color-obsidian-800: 255 255 255;  /* #FFFFFF - Pure crisp white card surface */
+  --color-obsidian-700: 241 245 249;  /* #F1F5F9 - Elevated panel / active pill */
+  --color-obsidian-600: 231 234 240;  /* #E7EAF0 - Crisp border */
+  --color-line-rgb: 231 234 240;      /* #E7EAF0 */
+  --color-line-alpha: 0.95;
+  --color-line-soft-rgb: 241 245 249;
+  --color-line-soft-alpha: 1.0;
+  --color-ink-rgb: 15 23 42;          /* #0F172A - Primary text */
+  --color-inksoft-rgb: 91 101 119;    /* #5B6577 - Secondary text */
+  --color-brand-rgb: 2 132 199;       /* #0284C7 - Base accent blue */
+  --color-brand-deep-rgb: 3 105 161;  /* #0369A1 - Cobalt blue */
+  --color-brand-glow-rgb: 14 165 233; /* #0EA5E9 - Sky blue */
+  --color-amber-rgb: 2 132 199;       /* Mapped to oceanic azure (NO ORANGE!) */
+  --color-crit-rgb: 225 29 72;        /* Crimson */
+  --color-ok-rgb: 16 185 129;         /* Emerald green */
+
+  --bg-app: #F7F9FC;
+  --text-app: #0F172A;
+  --glass-bg: #FFFFFF;
+  --glass-border: #E7EAF0;
+  --glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --glass-strong-bg: #FFFFFF;
+  --glass-strong-border: #CBD5E1;
+  --glass-strong-shadow: 0 10px 25px -3px rgba(15, 23, 42, 0.04), 0 4px 6px -2px rgba(15, 23, 42, 0.02);
+  --scrollbar-thumb: rgba(2, 132, 199, 0.2);
+  --map-land: #E2E8F0;
+  --map-pier: #CBD5E1;
+  --map-block: #E2E8F0;
+  --map-water: #F0F5FA;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', 'Manrope', 'Inter', system-ui, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-app);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Smooth Cross-Theme Transitions for all UI Elements */
+body, div, aside, header, nav, section, main, footer, button, input, select, table {
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+  transition-duration: 220ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wave path {
+  fill: currentColor;
+}
+
+/* Glassmorphism Panel System */
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.glass-strong {
+  background: var(--glass-strong-bg);
+  border: 1px solid var(--glass-strong-border);
+  box-shadow: var(--glass-strong-shadow);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+/* Component-wise Interactive Animations */
+.card-interactive {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+
+.card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -3px rgba(15, 23, 42, 0.08), 0 0 16px rgba(2, 132, 199, 0.08);
+  border-color: rgba(2, 132, 199, 0.32);
+}
+
+/* Keyframes for Component Animations */
+@keyframes cardEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes beaconPulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(24, 110, 180, 0.5);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 7px rgba(24, 110, 180, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(24, 110, 180, 0);
+  }
+}
+
+.animate-card-enter {
+  animation: cardEnter 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.pulse-beacon {
+  animation: beaconPulse 2.2s infinite ease-in-out;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
