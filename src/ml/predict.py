@@ -4,10 +4,17 @@ Evaluates incoming zone telemetry and returns congestion indices, risk tiers, an
 Includes graceful fallback if model artifact is not yet compiled.
 """
 
+import sys
 from pathlib import Path
 from typing import List, Dict, Any
 import joblib
 import numpy as np
+
+# Ensure feature_engineering (in the same ml/ directory) is importable
+# when this module is loaded from any working directory.
+_ML_DIR = Path(__file__).resolve().parent
+if str(_ML_DIR) not in sys.path:
+    sys.path.insert(0, str(_ML_DIR))
 
 MODEL_PATH = Path(__file__).resolve().parent / "models" / "congestion_model.pkl"
 _CACHED_BUNDLE = None

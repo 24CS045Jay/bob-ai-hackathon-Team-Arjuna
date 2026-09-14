@@ -3,30 +3,37 @@ PortFlow AI — ML Service Client
 Wraps the Random Forest inference engine in src/ml/predict.py with telemetry fetching and hotspot detection.
 """
 
+import sys
+from pathlib import Path
 from typing import List, Dict, Any
 from datetime import datetime
 
+# Ensure ml/ package directory is on sys.path so feature_engineering
+# and the model bundle are resolvable regardless of working directory.
+_SRC_DIR = Path(__file__).resolve().parent.parent.parent   # .../src/
+_ML_DIR = _SRC_DIR / "ml"
+for _p in (str(_SRC_DIR), str(_ML_DIR)):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+
 try:
-    from ...ml.predict import predict_congestion, get_risk_level
-except (ImportError, ValueError):
-    try:
-        from src.ml.predict import predict_congestion, get_risk_level
-    except (ImportError, ValueError):
-        # Graceful fallback
-        def predict_congestion(items):
-            return [
-                {
-                    "zone_id": it.get("zone_id", "A"),
-                    "predicted_congestion_index": 45.0,
-                    "risk_level": "medium",
-                    "bottleneck_factors": ["Nominal Terminal Operations"],
-                    "confidence": 0.85,
-                    "model_source": "Service-Fallback",
-                }
-                for it in items
-            ]
-        def get_risk_level(s):
-            return "medium"
+    from ml.predict import predict_congestion, get_risk_level
+except ImportError:
+    # Final graceful fallback — deterministic rule engine
+    def predict_congestion(items):
+        return [
+            {
+                "zone_id": it.get("zone_id", "A"),
+                "predicted_congestion_index": 45.0,
+                "risk_level": "medium",
+                "bottleneck_factors": ["Nominal Terminal Operations"],
+                "confidence": 0.85,
+                "model_source": "Service-Fallback",
+            }
+            for it in items
+        ]
+    def get_risk_level(s):
+        return "medium"
 
 
 def evaluate_zones(zone_features: List[Dict[str, Any]]) -> Dict[str, Any]:
