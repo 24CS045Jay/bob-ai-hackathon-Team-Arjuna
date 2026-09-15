@@ -7,10 +7,26 @@ import { useRole } from '../context/RoleContext.jsx'
 import { useOperationalContext } from '../context/OperationalContext.jsx'
 import { fetch72hPlan } from '../api/client.js'
 
+function getArcCoords(deg, cx = 100, cy = 95, r = 75) {
+  const rad = (deg * Math.PI) / 180
+  const x = cx - r * Math.cos(rad)
+  const y = cy - r * Math.sin(rad)
+  return `${x.toFixed(2)},${y.toFixed(2)}`
+}
+
+function makeArcPath(startDeg, endDeg, cx = 100, cy = 95, r = 75) {
+  const p1 = getArcCoords(startDeg, cx, cy, r)
+  const p2 = getArcCoords(endDeg, cx, cy, r)
+  return `M ${p1} A ${r} ${r} 0 0 1 ${p2}`
+}
+
 export default function DashboardPage() {
   const { activeRole, can } = useRole()
   const { vessels, berths } = useOperationalContext()
   const [chartMode, setChartMode] = useState('throughput') // 'throughput' | 'congestion'
+  const [hoveredPoint, setHoveredPoint] = useState(null)
+  const [selectedMonthIdx, setSelectedMonthIdx] = useState(1) // 1 = FEB (highlighted as in screenshot 4)
+  const [selectedBerthFilter, setSelectedBerthFilter] = useState('all') // 'all' | 'container' | 'dry_bulk' | 'roro' | 'tanker'
   const [planData, setPlanData] = useState(null)
 
   useEffect(() => {
@@ -18,6 +34,60 @@ export default function DashboardPage() {
       if (p) setPlanData(p)
     })
   }, [])
+
+  // Return On Turnaround Month Datasets (interactive, FEB active by default)
+  const turnaroundMonths = [
+    { month: 'JAN', full: 'January', height: '45%', sla: '210%', trend: '+14%', isUp: true, turnTime: '22.4h', vessels: 12 },
+    { month: 'FEB', full: 'February', height: '85%', sla: '283%', trend: '+24%', isUp: true, turnTime: '18.2h', vessels: 15 },
+    { month: 'MAR', full: 'March', height: '60%', sla: '235%', trend: '+16%', isUp: true, turnTime: '20.5h', vessels: 14 },
+    { month: 'APR', full: 'April', height: '70%', sla: '260%', trend: '+19%', isUp: true, turnTime: '19.1h', vessels: 16 },
+    { month: 'MAY', full: 'May', height: '50%', sla: '224%', trend: '+15%', isUp: true, turnTime: '21.8h', vessels: 13 },
+    { month: 'JUN', full: 'June', height: '65%', sla: '252%', trend: '+18%', isUp: true, turnTime: '19.7h', vessels: 15 },
+  ]
+  const currentTurnaround = turnaroundMonths[selectedMonthIdx]
+
+  // Telemetry interactive datasets
+  const telemetryData = {
+    throughput: {
+      headline: '$2,538,942',
+      badge: '16.3%',
+      badgeUp: true,
+      timeframe: 'last 12 months',
+      months: [
+        { label: 'Jan', val: '$1.82M', x: 0, y: 160, moves: '28,400 TEU' },
+        { label: 'Feb', val: '$2.15M', x: 116, y: 135, moves: '32,100 TEU' },
+        { label: 'Mar', val: '$2.38M', x: 233, y: 95, moves: '36,800 TEU' },
+        { label: 'Apr', val: '$2.31M', x: 350, y: 65, moves: '35,400 TEU' },
+        { label: 'May', val: '$2,538,942', x: 420, y: 70, moves: '39,200 TEU' },
+        { label: 'Jun', val: '$2.28M', x: 583, y: 125, moves: '34,700 TEU' },
+        { label: 'July', val: '$2.61M', x: 700, y: 145, moves: '41,300 TEU' }
+      ],
+      primaryCurve: 'M 0,160 C 80,180 160,120 233,95 C 290,75 350,55 420,70 C 490,85 580,130 700,145',
+      areaCurve: 'M 0,160 C 80,180 160,120 233,95 C 290,75 350,55 420,70 C 490,85 580,130 700,145 L 700,220 L 0,220 Z',
+      benchmarkCurve: 'M 0,140 C 90,90 180,125 280,110 C 380,95 480,135 600,120 C 650,115 680,100 700,90',
+      activePt: { x: 420, y: 70, month: 'May', val: '$2,538,942' }
+    },
+    congestion: {
+      headline: '24.2% Index',
+      badge: '8.4%',
+      badgeUp: false,
+      timeframe: 'last 12 months',
+      months: [
+        { label: 'Jan', val: '42.5%', x: 0, y: 60, moves: '4.8h avg delay' },
+        { label: 'Feb', val: '38.1%', x: 116, y: 80, moves: '4.1h avg delay' },
+        { label: 'Mar', val: '34.8%', x: 233, y: 105, moves: '3.6h avg delay' },
+        { label: 'Apr', val: '29.2%', x: 350, y: 130, moves: '2.9h avg delay' },
+        { label: 'May', val: '31.0%', x: 420, y: 120, moves: '3.2h avg delay' },
+        { label: 'Jun', val: '26.4%', x: 583, y: 145, moves: '2.5h avg delay' },
+        { label: 'July', val: '24.2%', x: 700, y: 155, moves: '2.1h avg delay' }
+      ],
+      primaryCurve: 'M 0,60 C 80,75 160,95 233,105 C 300,115 370,140 420,120 C 530,105 610,150 700,155',
+      areaCurve: 'M 0,60 C 80,75 160,95 233,105 C 300,115 370,140 420,120 C 530,105 610,150 700,155 L 700,220 L 0,220 Z',
+      benchmarkCurve: 'M 0,85 C 100,95 200,120 300,135 C 400,145 500,150 600,140 C 650,135 680,130 700,125',
+      activePt: { x: 700, y: 155, month: 'July', val: '24.2% Index' }
+    }
+  }
+  const currentTelemetry = telemetryData[chartMode]
 
   // MaterialM Table Data (matching Screenshot 4 Popular Products style)
   const popularVessels = [
@@ -210,44 +280,48 @@ export default function DashboardPage() {
         {/* 3. Middle Row: Overall Balance / Throughput Dual-Wave Line Chart + Return On Investment Bar Chart */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
           
-          {/* Overall Throughput Dual-Wave Card (col-span-8 matching Screenshot 2) */}
-          <div className="lg:col-span-8 bg-surface rounded-2xl p-6 border border-line shadow-card flex flex-col justify-between">
+          {/* Overall Throughput Dual-Wave Card (col-span-8 matching Screenshot 4) */}
+          <div className="lg:col-span-8 bg-surface rounded-2xl p-6 border border-line shadow-card flex flex-col justify-between relative overflow-hidden">
             <div>
               {/* Header */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                 <div>
                   <span className="text-xs font-semibold text-inksoft">Overall Operational Telemetry</span>
                   <div className="flex items-center gap-3 mt-1">
-                    <span className="text-2xl sm:text-3xl font-extrabold text-ink tracking-tight font-sans">
-                      $2,538,942
+                    <span className="text-2xl sm:text-3xl font-extrabold text-ink tracking-tight font-sans transition-all">
+                      {currentTelemetry.headline}
                     </span>
-                    <span className="inline-flex items-center gap-1 font-bold text-xs text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-400 px-2 py-0.5 rounded-md">
+                    <span className={`inline-flex items-center gap-1 font-bold text-xs px-2 py-0.5 rounded-md ${
+                      currentTelemetry.badgeUp 
+                        ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-400' 
+                        : 'text-sky-600 bg-sky-50 dark:bg-sky-950/40 dark:text-sky-400'
+                    }`}>
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                        <polyline points="18 15 12 9 6 15" />
+                        <polyline points={currentTelemetry.badgeUp ? "18 15 12 9 6 15" : "6 9 12 15 18 9"} />
                       </svg>
-                      16.3%
+                      {currentTelemetry.badge}
                     </span>
-                    <span className="text-xs text-inksoft">last 12 months</span>
+                    <span className="text-xs text-inksoft">{currentTelemetry.timeframe}</span>
                   </div>
                 </div>
 
-                {/* Orders / Expenses Pill Toggle Button Group */}
-                <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-800 p-1 self-start sm:self-auto">
+                {/* Throughput / Congestion Pill Toggle Button Group */}
+                <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-800 p-1 self-start sm:self-auto shadow-inner">
                   <button
-                    onClick={() => setChartMode('throughput')}
-                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                    onClick={() => { setChartMode('throughput'); setHoveredPoint(null); }}
+                    className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                       chartMode === 'throughput'
-                        ? 'bg-surface text-[#0085db] shadow-xs'
+                        ? 'bg-surface text-[#0085db] shadow-xs ring-1 ring-black/5 dark:ring-white/10'
                         : 'text-inksoft hover:text-ink'
                     }`}
                   >
                     Throughput
                   </button>
                   <button
-                    onClick={() => setChartMode('congestion')}
-                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                    onClick={() => { setChartMode('congestion'); setHoveredPoint(null); }}
+                    className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                       chartMode === 'congestion'
-                        ? 'bg-surface text-[#0085db] shadow-xs'
+                        ? 'bg-surface text-[#0085db] shadow-xs ring-1 ring-black/5 dark:ring-white/10'
                         : 'text-inksoft hover:text-ink'
                     }`}
                   >
@@ -256,218 +330,296 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Dual-Wave Smooth Curve SVG (MaterialM signature) */}
+              {/* Dual-Wave Smooth Curve SVG with Interactive Hover Points */}
               <div className="relative h-60 w-full pt-4">
                 <svg viewBox="0 0 700 220" className="w-full h-full overflow-visible" preserveAspectRatio="none">
                   <defs>
                     <linearGradient id="chartBlueGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#0085db" stopOpacity="0.18" />
-                      <stop offset="100%" stopColor="#0085db" stopOpacity="0.0" />
+                      <stop offset="0%" stopColor="#0085db" stopOpacity="0.22" />
+                      <stop offset="100%" stopColor="#0085db" stopOpacity="0.01" />
                     </linearGradient>
                   </defs>
 
-                  {/* Horizontal Guideline */}
+                  {/* Horizontal Guidelines */}
                   <line x1="0" y1="180" x2="700" y2="180" stroke="currentColor" strokeOpacity="0.08" strokeDasharray="4 4" />
-                  <line x1="0" y1="100" x2="700" y2="100" stroke="currentColor" strokeOpacity="0.08" strokeDasharray="4 4" />
+                  <line x1="0" y1="110" x2="700" y2="110" stroke="currentColor" strokeOpacity="0.08" strokeDasharray="4 4" />
 
-                  {/* Wave 2: Gray Muted Curve */}
+                  {/* Wave 2: Benchmark Curve (Gray) */}
                   <path
-                    d="M 0,140 Q 100,80 200,120 T 400,100 T 600,140 T 700,90"
+                    d={currentTelemetry.benchmarkCurve}
                     fill="none"
                     stroke="#CBD5E1"
-                    strokeWidth="3.2"
+                    strokeWidth="3"
                     strokeLinecap="round"
+                    className="transition-all duration-700 ease-out"
                   />
 
                   {/* Wave 1 Area Gradient Fill */}
                   <path
-                    d="M 0,160 Q 120,180 220,110 T 420,70 T 580,120 T 700,150 L 700,220 L 0,220 Z"
+                    d={currentTelemetry.areaCurve}
                     fill="url(#chartBlueGrad)"
+                    className="transition-all duration-700 ease-out"
                   />
 
-                  {/* Wave 1: Cyan Curve (Vivid #0085db) */}
+                  {/* Wave 1: Primary Cyan/Blue Curve */}
                   <path
-                    d="M 0,160 Q 120,180 220,110 T 420,70 T 580,120 T 700,150"
+                    d={currentTelemetry.primaryCurve}
                     fill="none"
                     stroke="#0085db"
                     strokeWidth="3.8"
                     strokeLinecap="round"
+                    className="transition-all duration-700 ease-out"
                   />
 
-                  {/* Peak Highlight Circle */}
-                  <circle cx="420" cy="70" r="5" fill="#0085db" stroke="#FFFFFF" strokeWidth="3" className="shadow-md" />
+                  {/* Active Highlight Marker */}
+                  <circle
+                    cx={currentTelemetry.activePt.x}
+                    cy={currentTelemetry.activePt.y}
+                    r="5.5"
+                    fill="#0085db"
+                    stroke="#FFFFFF"
+                    strokeWidth="3.5"
+                    className="shadow-md animate-pulse"
+                  />
+
+                  {/* Interactive Month Points (Hoverable & Clickable) */}
+                  {currentTelemetry.months.map((pt, i) => (
+                    <g key={i} className="cursor-pointer group" onMouseEnter={() => setHoveredPoint(pt)} onMouseLeave={() => setHoveredPoint(null)}>
+                      <circle cx={pt.x} cy={pt.y} r="14" fill="transparent" />
+                      <circle cx={pt.x} cy={pt.y} r="4" fill="#0085db" opacity="0.3" className="group-hover:opacity-100 group-hover:scale-150 transition-all origin-center" />
+                    </g>
+                  ))}
                 </svg>
 
-                {/* Month Ticks */}
+                {/* Floating Tooltip for Hovered Data Point */}
+                {hoveredPoint && (
+                  <div
+                    className="absolute z-20 px-3 py-1.5 rounded-xl bg-slate-900/90 text-white text-xs font-semibold shadow-xl backdrop-blur-md pointer-events-none transition-all duration-150 border border-white/10"
+                    style={{ left: `clamp(10px, ${(hoveredPoint.x / 700) * 90}%, 85%)`, top: `${Math.max(10, hoveredPoint.y - 45)}px` }}
+                  >
+                    <span className="text-[#38bdf8] font-bold block text-[11px]">{hoveredPoint.label}</span>
+                    <span className="text-white font-extrabold">{hoveredPoint.val}</span>
+                    <span className="text-slate-300 text-[10px] block font-normal">{hoveredPoint.moves}</span>
+                  </div>
+                )}
+
+                {/* Month Ticks along X-Axis */}
                 <div className="flex justify-between text-xs text-inksoft font-medium pt-3 px-1">
-                  <span>Jan</span>
-                  <span>Feb</span>
-                  <span>Mar</span>
-                  <span>Apr</span>
-                  <span>May</span>
-                  <span>Jun</span>
-                  <span>July</span>
+                  {currentTelemetry.months.map((m, idx) => (
+                    <span
+                      key={idx}
+                      onClick={() => setHoveredPoint(m)}
+                      className={`cursor-pointer transition-colors ${hoveredPoint?.label === m.label ? 'text-[#0085db] font-bold' : 'hover:text-ink'}`}
+                    >
+                      {m.label}
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Return On Turnaround Bar Chart (col-span-4 matching Screenshot 2) */}
+          {/* Return On Turnaround Bar Chart (col-span-4 matching Screenshot 4) */}
           <div className="lg:col-span-4 bg-surface rounded-2xl p-6 border border-line shadow-card flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-base font-bold text-ink tracking-tight">Return On Turnaround</h3>
-                <button className="text-inksoft hover:text-ink p-1">
+                <button
+                  onClick={() => setSelectedMonthIdx((prev) => (prev + 1) % turnaroundMonths.length)}
+                  title="Cycle month SLA"
+                  className="text-inksoft hover:text-ink p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <circle cx="12" cy="5" r="1" />
-                    <circle cx="12" cy="12" r="1" />
-                    <circle cx="12" cy="19" r="1" />
+                    <circle cx="12" cy="5" r="1.5" />
+                    <circle cx="12" cy="12" r="1.5" />
+                    <circle cx="12" cy="19" r="1.5" />
                   </svg>
                 </button>
               </div>
 
-              {/* Stat Row */}
+              {/* Stat Row - Dynamically changes based on selected/hovered month */}
               <div className="flex items-center gap-3 my-3">
-                <div className="w-10 h-10 rounded-2xl bg-sky-50 dark:bg-sky-950/40 text-[#0085db] flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-2xl bg-sky-50 dark:bg-sky-950/40 text-[#0085db] flex items-center justify-center shrink-0 shadow-xs">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
                     <polyline points="17 6 23 6 23 12" />
                   </svg>
                 </div>
                 <div>
-                  <div className="text-xl sm:text-2xl font-extrabold text-ink tracking-tight">283%</div>
-                  <div className="text-xs text-inksoft">SLA Performance</div>
+                  <div className="text-xl sm:text-2xl font-extrabold text-ink tracking-tight transition-all">
+                    {currentTurnaround.sla}
+                  </div>
+                  <div className="text-xs text-inksoft font-medium">SLA Performance</div>
                 </div>
                 <div className="ml-auto text-right">
                   <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md">
-                    +24%
+                    {currentTurnaround.trend}
                   </span>
-                  <div className="text-[11px] text-inksoft mt-0.5">January</div>
+                  <div className="text-[11px] text-inksoft mt-0.5 font-medium">{currentTurnaround.full}</div>
                 </div>
               </div>
 
-              {/* Vertical Bar Chart with Rounded Caps */}
+              {/* Vertical Bar Chart with Interactive Clickable Bars */}
               <div className="h-44 flex items-end justify-between gap-3 pt-4 px-2">
-                {[
-                  { month: 'JAN', height: '45%', highlight: false },
-                  { month: 'FEB', height: '85%', highlight: true },
-                  { month: 'MAR', height: '60%', highlight: false },
-                  { month: 'APR', height: '70%', highlight: false },
-                  { month: 'MAY', height: '50%', highlight: false },
-                  { month: 'JUN', height: '65%', highlight: false }
-                ].map((bar, idx) => (
-                  <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+                {turnaroundMonths.map((bar, idx) => {
+                  const isHighlighted = selectedMonthIdx === idx
+                  return (
                     <div
-                      className={`w-full max-w-[28px] rounded-t-xl transition-all duration-500 ${
-                        bar.highlight
-                          ? 'bg-[#0085db] shadow-sm'
-                          : 'bg-slate-200 dark:bg-slate-700/60'
-                      }`}
-                      style={{ height: bar.height }}
-                    />
-                    <span className="text-[10.5px] font-bold text-inksoft">{bar.month}</span>
-                  </div>
-                ))}
+                      key={idx}
+                      onClick={() => setSelectedMonthIdx(idx)}
+                      title={`${bar.full}: ${bar.sla} SLA, ${bar.turnTime} turn time`}
+                      className="flex-1 flex flex-col items-center gap-2 h-full justify-end cursor-pointer group"
+                    >
+                      <div
+                        className={`w-full max-w-[28px] rounded-t-xl transition-all duration-400 ${
+                          isHighlighted
+                            ? 'bg-[#0085db] shadow-[0_4px_16px_rgba(0,133,219,0.35)] scale-y-100'
+                            : 'bg-slate-200 dark:bg-slate-700/60 group-hover:bg-slate-300 dark:group-hover:bg-slate-600'
+                        }`}
+                        style={{ height: bar.height }}
+                      />
+                      <span className={`text-[10.5px] font-bold transition-colors ${isHighlighted ? 'text-[#0085db]' : 'text-inksoft group-hover:text-ink'}`}>
+                        {bar.month}
+                      </span>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </div>
         </div>
 
-        {/* 4. Second Middle Row: Quayside Capacity Gauge + 3 Pastel Stat Mini-Cards */}
+        {/* 4. Second Middle Row: Quayside Berth Allocation Gauge (Screenshot 3) + 3 Pastel Stat Mini-Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
           
-          {/* Quayside Semicircular Donut Meter (col-span-4 matching Screenshots 3 & 5 Product Sales) */}
+          {/* Quayside Berth Allocation Semicircular Gauge (col-span-4 Strictly matching Screenshot 3) */}
           <div className="lg:col-span-4 bg-surface rounded-2xl p-6 border border-line shadow-card flex flex-col justify-between">
             <div>
+              {/* Header with Title and Three-Dot Menu */}
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-base font-bold text-ink tracking-tight">Quayside Berth Allocation</h3>
-                <button className="text-inksoft hover:text-ink p-1">
+                <button
+                  onClick={() => setSelectedBerthFilter(prev => prev === 'all' ? 'container' : 'all')}
+                  title="Toggle Allocation View"
+                  className="text-inksoft hover:text-ink p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <circle cx="12" cy="5" r="1" />
-                    <circle cx="12" cy="12" r="1" />
-                    <circle cx="12" cy="19" r="1" />
+                    <circle cx="12" cy="5" r="1.5" />
+                    <circle cx="12" cy="12" r="1.5" />
+                    <circle cx="12" cy="19" r="1.5" />
                   </svg>
                 </button>
               </div>
 
-              {/* Semicircular Meter SVG */}
+              {/* Semicircular Gauge Matching Screenshot 3 */}
               <div className="relative h-44 flex flex-col items-center justify-center my-2">
-                <svg viewBox="0 0 200 120" className="w-52 h-32 overflow-visible">
-                  {/* Background Arc */}
+                <svg viewBox="0 0 200 120" className="w-56 h-36 overflow-visible">
+                  {/* Background Track Arc */}
                   <path
-                    d="M 20,110 A 80,80 0 0,1 180,110"
+                    d="M 25,108 A 75 75 0 0 1 175,108"
                     fill="none"
-                    stroke="#E2E8F0"
-                    strokeWidth="18"
+                    stroke="#F1F5F9"
+                    strokeWidth="16"
                     strokeLinecap="round"
+                    className="dark:stroke-slate-800/80"
                   />
-                  {/* Arc Segments */}
+
+                  {/* 1. Container Segment (36%): Blue Arc */}
                   <path
-                    d="M 20,110 A 80,80 0 0,1 60,42"
+                    d={makeArcPath(0, 62, 100, 108, 75)}
                     fill="none"
                     stroke="#0085db"
-                    strokeWidth="18"
+                    strokeWidth="16"
                     strokeLinecap="round"
+                    className="transition-all duration-300 hover:brightness-110 cursor-pointer"
+                    title="Container: 36% (Berths B01-B03)"
                   />
+
+                  {/* 2. Dry Bulk Segment (22%): Violet Arc */}
                   <path
-                    d="M 68,36 A 80,80 0 0,1 115,30"
+                    d={makeArcPath(66, 104, 100, 108, 75)}
                     fill="none"
                     stroke="#7352FF"
-                    strokeWidth="18"
+                    strokeWidth="16"
+                    className="transition-all duration-300 hover:brightness-110 cursor-pointer"
+                    title="Dry Bulk: 22% (Berths B04-B05)"
                   />
+
+                  {/* Subtle Separator Spacer Segment */}
                   <path
-                    d="M 125,32 A 80,80 0 0,1 168,75"
+                    d={makeArcPath(106, 110, 100, 108, 75)}
+                    fill="none"
+                    stroke="#E2E8F0"
+                    strokeWidth="16"
+                    className="dark:stroke-slate-700/60"
+                  />
+
+                  {/* 3. Ro-Ro Segment (31%): Yellow/Orange Arc */}
+                  <path
+                    d={makeArcPath(113, 148, 100, 108, 75)}
                     fill="none"
                     stroke="#FFAE1F"
-                    strokeWidth="18"
+                    strokeWidth="16"
+                    className="transition-all duration-300 hover:brightness-110 cursor-pointer"
+                    title="Ro-Ro: 31% (Ramp Terminal R1)"
                   />
+
+                  {/* 4. Tanker Segment (17%): Cyan/Teal Arc */}
                   <path
-                    d="M 172,83 A 80,80 0 0,1 180,110"
+                    d={makeArcPath(152, 180, 100, 108, 75)}
                     fill="none"
                     stroke="#13DEB9"
-                    strokeWidth="18"
+                    strokeWidth="16"
                     strokeLinecap="round"
+                    className="transition-all duration-300 hover:brightness-110 cursor-pointer"
+                    title="Tanker: 17% (Pier 400 Deepwater Jetty)"
                   />
                 </svg>
 
-                {/* Center Stat & Best Allocation Pill */}
-                <div className="absolute top-16 text-center">
-                  <span className="text-2xl font-black text-ink block leading-none">8,364</span>
-                  <div className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full mt-1.5">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                {/* Center Value & Optimal SLA Badge Matching Screenshot 3 */}
+                <div className="absolute top-14 text-center select-none pointer-events-none">
+                  <span className="text-3xl font-extrabold text-ink block leading-tight tracking-tight">
+                    8,364
+                  </span>
+                  <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#00A86B] dark:text-emerald-400 bg-[#E8F8F0] dark:bg-emerald-950/60 px-3 py-1 rounded-full mt-1.5 shadow-xs">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
                       <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                     </svg>
-                    Optimal SLA
+                    <span>Optimal SLA</span>
                   </div>
                 </div>
               </div>
 
-              {/* Legend 4 Items */}
-              <div className="grid grid-cols-2 gap-2 pt-3 border-t border-line text-xs font-semibold text-ink">
-                <span className="flex items-center gap-2 truncate">
+              {/* 2x2 Legend Grid strictly matching Screenshot 3 */}
+              <div className="grid grid-cols-2 gap-y-2.5 gap-x-4 pt-3.5 border-t border-line text-xs font-semibold text-ink">
+                {/* Left Column */}
+                <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#0085db] shrink-0" />
-                  36% Container
-                </span>
-                <span className="flex items-center gap-2 truncate">
+                  <span>36% Container</span>
+                </div>
+                {/* Right Column */}
+                <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#13DEB9] shrink-0" />
-                  17% Tanker
-                </span>
-                <span className="flex items-center gap-2 truncate">
+                  <span>17% Tanker</span>
+                </div>
+                {/* Left Column */}
+                <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#7352FF] shrink-0" />
-                  22% Dry Bulk
-                </span>
-                <span className="flex items-center gap-2 truncate">
+                  <span>22% Dry Bulk</span>
+                </div>
+                {/* Right Column */}
+                <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#FFAE1F] shrink-0" />
-                  31% Ro-Ro
-                </span>
+                  <span>31% Ro-Ro</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* 3 Pastel Stat Cards (col-span-8 matching Screenshot 2: Total followers, Total income, Current balance) */}
+          {/* 3 Pastel Stat Cards (col-span-8 matching Screenshot 4: Gang Assignments, Tariff Earnings, Drayage Flow) */}
           <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-5">
             
-            {/* Card 1: Assigned Stevedores (Total followers style) */}
+            {/* Card 1: Gang Assignments */}
             <div className="bg-surface rounded-2xl p-5 border border-line shadow-card flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between">
@@ -488,12 +640,12 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-end gap-1.5 h-10 mt-4">
                 {[40, 65, 80, 50, 95, 75].map((h, i) => (
-                  <div key={i} className="flex-1 bg-rose-400 rounded-t-sm" style={{ height: `${h}%` }} />
+                  <div key={i} className="flex-1 bg-rose-400 hover:bg-rose-500 rounded-t-sm transition-colors cursor-pointer" style={{ height: `${h}%` }} title={`Shift ${i+1}: ${h * 50} workers`} />
                 ))}
               </div>
             </div>
 
-            {/* Card 2: Terminal Income (Total income style) */}
+            {/* Card 2: Tariff Earnings */}
             <div className="bg-surface rounded-2xl p-5 border border-line shadow-card flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between">
@@ -517,7 +669,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Card 3: Yard Readiness (Current balance style) */}
+            {/* Card 3: Drayage Flow */}
             <div className="bg-surface rounded-2xl p-5 border border-line shadow-card flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between">

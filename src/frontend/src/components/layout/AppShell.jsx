@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import Sidebar from './Sidebar.jsx'
 import Topbar from './Topbar.jsx'
 import CommandPalette from './CommandPalette.jsx'
@@ -26,17 +27,51 @@ export default function AppShell({ crumb, children }) {
         </main>
       </div>
 
-      {/* Floating Settings FAB Button (MaterialM Signature) */}
-      <button
+      {/* Floating Animated Copilot Character Icon Button (Bottom Right) */}
+      <motion.button
         onClick={() => setIsCopilotOpen(true)}
-        title="Open Copilot Assistant & Terminal Settings"
-        className="fixed bottom-6 right-6 w-11 h-11 rounded-full bg-[#0085db] hover:bg-[#0074c2] text-white shadow-[0_4px_16px_rgba(0,133,219,0.38)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40 cursor-pointer"
+        title="PortFlow AI Operations Copilot — Ask Any Query"
+        aria-label="Open PortFlow AI Copilot"
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.92 }}
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-tr from-[#0074c2] via-[#0085db] to-[#38bdf8] text-white shadow-[0_8px_25px_rgba(0,133,219,0.45)] flex items-center justify-center z-40 cursor-pointer border-2 border-white/50 group overflow-visible select-none"
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="hover:rotate-45 transition-transform duration-500">
-          <circle cx="12" cy="12" r="3" />
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-        </svg>
-      </button>
+        {/* Ambient Pulse Ripple */}
+        <span className="absolute inset-0 rounded-full bg-[#0085db]/40 animate-ping pointer-events-none opacity-40" />
+        <span className="absolute -inset-1 rounded-full bg-sky-400/20 blur-md pointer-events-none group-hover:bg-sky-400/50 transition-colors" />
+
+        {/* Animated Floating Robot Character */}
+        <div className="relative z-10 w-9 h-9 flex items-center justify-center animate-[bounce_3s_ease-in-out_infinite]">
+          <svg viewBox="0 0 36 36" fill="none" className="w-full h-full drop-shadow-[0_3px_6px_rgba(0,0,0,0.35)]">
+            {/* Antenna with pulsing beacon tip */}
+            <line x1="18" y1="9" x2="18" y2="4" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
+            <circle cx="18" cy="3.5" r="2.5" fill="#38BDF8" className="animate-pulse" />
+
+            {/* Robot Head Outer Body */}
+            <rect x="7" y="9" width="22" height="17" rx="8" fill="#FFFFFF" />
+            {/* Ear headphone pods */}
+            <rect x="4" y="14" width="3" height="7" rx="1.5" fill="#E2E8F0" />
+            <rect x="29" y="14" width="3" height="7" rx="1.5" fill="#E2E8F0" />
+
+            {/* Digital Visor Face Screen */}
+            <rect x="10" y="12.5" width="16" height="10" rx="4" fill="#091420" />
+
+            {/* Glowing Cyan Animated Eyes */}
+            <ellipse cx="14.5" cy="17.5" rx="2" ry="2.2" fill="#38BDF8" className="animate-pulse" />
+            <ellipse cx="21.5" cy="17.5" rx="2" ry="2.2" fill="#38BDF8" className="animate-pulse" />
+
+            {/* Friendly Voice Wave Smile */}
+            <path d="M16 20.5 Q18 22 20 20.5" stroke="#38BDF8" strokeWidth="1.2" strokeLinecap="round" />
+
+            {/* Robot Neck & Collar */}
+            <path d="M11 27 C11 27 13 32 18 32 C23 32 25 27 25 27" fill="#E2E8F0" />
+            <circle cx="18" cy="29" r="1.2" fill="#0085db" />
+          </svg>
+        </div>
+
+        {/* Live Operational Status Dot */}
+        <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-slate-900 shadow-[0_0_8px_rgba(52,211,153,0.9)] z-20" />
+      </motion.button>
 
       {/* Grounded Operations Copilot Drawer */}
       <CopilotSidebar isOpen={isCopilotOpen} setIsOpen={setIsCopilotOpen} />

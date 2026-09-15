@@ -23,59 +23,59 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const { roles, login } = useRole()
   const [selectedRoleCode, setSelectedRoleCode] = useState('shift_supervisor')
-  const [email, setEmail] = useState('supervisor@globalcargo.com')
+  const [email, setEmail] = useState('supervisor@portflow.ai')
   const [password, setPassword] = useState('••••••••••••')
   const [rememberMe, setRememberMe] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
 
   const roleMeta = {
     admin: {
-      email: 'admin@globalcargo.com',
+      email: 'admin@portflow.ai',
       color: 'bg-[#0085db]',
       border: 'border-[#0085db]',
-      lightBg: 'bg-[#EBF3FE] text-[#0085db]',
+      lightBg: 'bg-sky-100/90 text-[#0085db]',
       accent: '#0085db',
       ring: 'ring-[#0085db]/40',
       tag: 'Full Authority',
       desc: 'Complete quayside, gate, and hydro-routing overrides.'
     },
     shift_supervisor: {
-      email: 'supervisor@globalcargo.com',
-      color: 'bg-[#FFAE1F]',
-      border: 'border-[#FFAE1F]',
-      lightBg: 'bg-amber-100/80 text-amber-700',
-      accent: '#FFAE1F',
-      ring: 'ring-amber-400/40',
+      email: 'supervisor@portflow.ai',
+      color: 'bg-[#0085db]',
+      border: 'border-[#0085db]',
+      lightBg: 'bg-sky-100/90 text-[#0085db]',
+      accent: '#0085db',
+      ring: 'ring-[#0085db]/40',
       tag: 'Ops Lead',
       desc: '72h rolling horizon solvers, crane gangs, and demurrage.'
     },
     berth_planner: {
-      email: 'planner@globalcargo.com',
-      color: 'bg-[#7352FF]',
-      border: 'border-[#7352FF]',
-      lightBg: 'bg-violet-100/80 text-violet-700',
-      accent: '#7352FF',
-      ring: 'ring-violet-400/40',
+      email: 'planner@portflow.ai',
+      color: 'bg-[#0085db]',
+      border: 'border-[#0085db]',
+      lightBg: 'bg-sky-100/90 text-[#0085db]',
+      accent: '#0085db',
+      ring: 'ring-[#0085db]/40',
       tag: 'Berth Allocation',
       desc: 'Vessel UKC dynamic draft clearance and pier scheduling.'
     },
     gate_controller: {
-      email: 'gate@globalcargo.com',
-      color: 'bg-[#13DEB9]',
-      border: 'border-[#13DEB9]',
-      lightBg: 'bg-teal-100/80 text-teal-700',
-      accent: '#13DEB9',
-      ring: 'ring-teal-400/40',
+      email: 'gate@portflow.ai',
+      color: 'bg-[#0085db]',
+      border: 'border-[#0085db]',
+      lightBg: 'bg-sky-100/90 text-[#0085db]',
+      accent: '#0085db',
+      ring: 'ring-[#0085db]/40',
       tag: 'Drayage & OCR',
       desc: 'Turnaround queues, optical truck lanes, and demurrage timers.'
     },
     viewer: {
-      email: 'viewer@globalcargo.com',
-      color: 'bg-slate-600',
-      border: 'border-slate-500',
-      lightBg: 'bg-slate-100/80 text-slate-700',
-      accent: '#475569',
-      ring: 'ring-slate-400/40',
+      email: 'viewer@portflow.ai',
+      color: 'bg-[#0085db]',
+      border: 'border-[#0085db]',
+      lightBg: 'bg-sky-100/90 text-[#0085db]',
+      accent: '#0085db',
+      ring: 'ring-[#0085db]/40',
       tag: 'Auditor / Viewer',
       desc: 'Read-only satellite AIS transponders and analytics feed.'
     }
@@ -83,7 +83,7 @@ export default function LoginPage() {
 
   const handleSelectRole = (code) => {
     setSelectedRoleCode(code)
-    setEmail(roleMeta[code]?.email || `${code}@globalcargo.com`)
+    setEmail(roleMeta[code]?.email || `${code}@portflow.ai`)
     setPassword('••••••••••••')
   }
 
@@ -125,7 +125,7 @@ export default function LoginPage() {
           </div>
           <div>
             <span className="font-extrabold text-lg text-white tracking-tight block leading-tight">
-              Global Cargo <span className="text-[#0085db]">Tideline</span>
+              PortFlow <span className="text-[#0085db]">AI</span>
             </span>
             <span className="text-[11px] text-white/50 font-medium">Pier 400 Deepwater Terminal OS</span>
           </div>
@@ -370,8 +370,8 @@ export default function LoginPage() {
 
       {/* ── Footer ── */}
       <footer className="relative z-20 py-4 px-6 sm:px-12 border-t border-white/10 bg-black/30 backdrop-blur-md text-center text-xs text-white/35 flex flex-col sm:flex-row items-center justify-between gap-2">
-        <span>Global Cargo &amp; Tideline TOS · Pier 400 Deepwater Terminal Operations</span>
-        <span>&copy; {new Date().getFullYear()} Global Cargo Logistics Inc. All rights reserved.</span>
+        <span>PortFlow AI Platform · Pier 400 Deepwater Terminal Operations</span>
+        <span>&copy; {new Date().getFullYear()} PortFlow AI Inc. All rights reserved.</span>
       </footer>
     </div>
   )
