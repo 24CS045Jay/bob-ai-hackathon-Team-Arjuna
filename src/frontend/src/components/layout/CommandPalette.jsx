@@ -219,7 +219,7 @@ export default function CommandPalette() {
                 <span>↵ Select</span>
                 <span>ESC Close</span>
               </div>
-              <span className="text-[10px]">TIDELINE CORE ⌘K</span>
+              <span className="text-[10px]">PORTFLOW AI ⌘K</span>
             </div>
           </motion.div>
         </motion.div>

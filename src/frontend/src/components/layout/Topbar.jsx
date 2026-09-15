@@ -147,22 +147,6 @@ export default function Topbar({ crumb = 'Port Operations', onOpenCopilot, onTog
         {/* Notifications Icon with Badge (5) */}
         <NotificationCenter />
 
-        {/* Primary Action Button (+ Ask Copilot) */}
-        {onOpenCopilot && (
-          <motion.button
-            whileTap={buttonPressInteraction}
-            onClick={onOpenCopilot}
-            title="Open PortFlow AI Operations Copilot"
-            className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-[#0085db] hover:bg-[#0074c2] text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            <span>Ask Copilot</span>
-          </motion.button>
-        )}
-
         {/* MaterialM Circular User Profile Avatar with Online Status Dot */}
         <div className="relative pl-1" ref={roleMenuRef}>
           <motion.button

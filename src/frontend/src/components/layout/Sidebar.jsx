@@ -237,7 +237,7 @@ export default function Sidebar({ isOpen = false, onToggle }) {
         <div className="flex flex-col items-center gap-4">
           <NavLink
             to="/"
-            title="Tideline Maritime OS"
+            title="PortFlow AI Operations OS"
             className="w-10 h-10 rounded-2xl flex items-center justify-center hover:scale-105 transition-transform"
           >
             <svg width="36" height="36" viewBox="0 0 38 38" fill="none">

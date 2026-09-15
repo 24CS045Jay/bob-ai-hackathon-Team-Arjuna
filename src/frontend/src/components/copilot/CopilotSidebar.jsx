@@ -106,22 +106,6 @@ export default function CopilotSidebar({ isOpen, setIsOpen }) {
 
   return (
     <>
-      {/* Floating launcher trigger if closed */}
-      {!isOpen && (
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={buttonPressInteraction}
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 rounded-full shadow-2xl bg-gradient-to-r from-brand to-brand-deep text-white font-semibold text-xs border border-brand/40 glass hover:shadow-brand/25 transition-all"
-        >
-          <span className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-300 opacity-75" />
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-400" />
-          </span>
-          <span>watsonx AI Copilot</span>
-        </motion.button>
-      )}
-
       {/* Slide-over Drawer */}
       <AnimatePresence>
         {isOpen && (
