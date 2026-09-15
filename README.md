@@ -10,7 +10,7 @@
 |---|---|
 | **Team Name** | **Team Arjuna** |
 | **Track** | **AI (Artificial Intelligence & Operations Research)** |
-| **Team Lead** | **Jay Ladva** (`24cs045.jay@gmail.com`) |
+| **Team Lead** | **Jay Ladva** (`24cs045@charusat.edu.in`) |
 | **Team Members** | • **Jay Ladva** — Backend Architecture, AI Pipelines & API Orchestration<br>• **Param Shah** — Machine Learning Models & Constraint Optimization Solvers<br>• **Nishant Virani** — React Digital Twin Web UI, GIS Visualization & UX<br>• **Smit Bhesaniya** — Cloud Data Infrastructure, Supabase & Telemetry Integration |
 
 ---
