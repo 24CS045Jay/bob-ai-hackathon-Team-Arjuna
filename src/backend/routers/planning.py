@@ -4,10 +4,14 @@ Endpoints:
   GET  /api/planning/72h — Returns 12-slice multi-horizon operational plan
   POST /api/planning/72h — Generates plan with customized base timestamp
 """
-
 from fastapi import APIRouter
-from ..models.schemas import Planning72hRequest, Planning72hResponse
-from ..services.planner_client import get_72h_operations_plan
+
+try:
+    from ..models.schemas import Planning72hRequest, Planning72hResponse
+    from ..services.planner_client import get_72h_operations_plan
+except (ImportError, ValueError):
+    from models.schemas import Planning72hRequest, Planning72hResponse
+    from services.planner_client import get_72h_operations_plan
 
 router = APIRouter(prefix="/api/planning", tags=["Planning"])
 
