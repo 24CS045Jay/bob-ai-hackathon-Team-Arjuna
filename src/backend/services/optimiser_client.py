@@ -17,7 +17,10 @@ from optimisation.berth_assignment import optimize_berth_assignments, CANONICAL_
 from optimisation.crane_assignment import optimize_crane_assignments, CANONICAL_CRANES
 from optimisation.routing import plan_vessel_route, WAYPOINTS
 
-from ..db.models import VesselModel, BerthModel, CraneModel
+try:
+    from ..db.models import VesselModel, BerthModel, CraneModel
+except (ImportError, ValueError):
+    from db.models import VesselModel, BerthModel, CraneModel
 
 
 def run_berth_optimization(db: Session, vessels: Optional[List[Dict[str, Any]]] = None, current_time_iso: Optional[str] = None) -> Dict[str, Any]:

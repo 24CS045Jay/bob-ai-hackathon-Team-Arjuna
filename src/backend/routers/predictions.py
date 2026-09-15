@@ -6,10 +6,14 @@ Endpoints:
 """
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from ..db.database import get_db
-from ..models.schemas import CongestionPredictionRequest, CongestionPredictionResponse, HotspotResponse
-from ..services.ml_client import evaluate_zones, get_current_hotspots
+try:
+    from ..db.database import get_db
+    from ..models.schemas import CongestionPredictionRequest, CongestionPredictionResponse, HotspotResponse
+    from ..services.ml_client import evaluate_zones, get_current_hotspots
+except (ImportError, ValueError):
+    from db.database import get_db
+    from models.schemas import CongestionPredictionRequest, CongestionPredictionResponse, HotspotResponse
+    from services.ml_client import evaluate_zones, get_current_hotspots
 
 router = APIRouter(prefix="/api/predictions", tags=["Predictions"])
 

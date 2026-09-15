@@ -1,26 +1,22 @@
-# Screenshots
+# 🖼️ Application Screenshots — PortFlow AI (Team Arjuna)
 
-Place your application screenshots in this folder.
+Place application screenshots in this directory.
 
-## Naming Convention
+---
 
-Name your screenshots sequentially so they appear in logical order:
+## Recommended Screenshots for Evaluation
 
-  01-landing-page.png       ← First thing a user sees
-  02-main-feature.png       ← Your primary feature in action
-  03-output-or-results.png  ← The result / value delivered
-  04-additional-feature.png ← Any other notable screen
+| File Name | Screen / Feature | Description |
+|---|---|---|
+| `01-landing-page.png` | **Situational Digital Twin & Map** | High-density port map displaying live vessels, berths B01–B12, and Zone A–F telemetry. |
+| `02-berth-crane-optimization.png` | **Berth & Crane Allocation Solver** | Constraint satisfaction results, LOA/draft validation, and EDF crane dispatch schedules. |
+| `03-72h-congestion-planner.png` | **72-Hour Congestion Horizon** | 12-slice multi-horizon operational matrix forecasting zone risk levels and bottleneck factors. |
+| `04-ai-operations-copilot.png` | **Context-Grounded AI Copilot** | Natural language assistant answering complex fleet queries with live numerical grounding and zero hallucination. |
+| `05-channel-routing.png` | **Dijkstra Dynamic UKC Routing** | Fairway waypoint navigation avoiding shallow channels during low tidal windows. |
+| `06-supabase-cloud-db.png` | **Supabase Cloud Database** | Active Supabase PostgreSQL tables (`vessels`, `berths`, `cranes`, `zone_telemetry`) and schema status. |
 
-## Requirements
+---
 
-- Minimum: 3 screenshots
-- Format: PNG or JPG
-- Show the application running with real (or realistic mock) data
-- Avoid screenshots of empty states or placeholder data
-- Captions are not required but appreciated
-
-## Tips
-
-- Use a consistent browser window size across all screenshots
-- Highlight key UI elements with arrows/circles if helpful (use any image editor)
-- Include a screenshot showing IBM technology integration if applicable
+## Guidelines
+- Use PNG format for crisp UI text and graphics.
+- Capture the UI in full-screen desktop resolution (1920x1080 or similar).
