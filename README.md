@@ -198,8 +198,8 @@ npm run dev
 | Deliverable | Location / Link | Status |
 |---|---|---|
 | 📹 **Demo Video** | [`demo/demo-video-link.txt`](demo/demo-video-link.txt) | *Add URL manually* |
-| 🌐 **Live Deployed App** | [`demo/live-demo-url.txt`](demo/live-demo-url.txt) | *Add URL manually* |
-| 📊 **Presentation Slides** | [`presentation/slides.pdf`](presentation/) | *Add file manually* |
+| 🌐 **Live Deployed App** | [`demo/live-demo-url.txt`](demo/live-demo-url.txt) | *https://frontend-coral-alpha-83.vercel.app* |
+| 📊 **Presentation Slides** | [`presentation/slides.pdf`](presentation/) | *presentation/slides* |
 | 🖼️ **Screenshots** | [`demo/screenshots/`](demo/screenshots/) | Available in folder |
 
 ---
