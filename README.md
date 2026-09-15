@@ -10,8 +10,8 @@
 |---|---|
 | **Team Name** | Team Arjuna |
 | **Track** | AI |
-| **Team Lead** | Arjuna Lead — team-arjuna@bob-ai.local |
-| **Members** | Jay, Team Arjuna Engineers |
+| **Team Lead** | Param Shah - 24CS093@charusat.edu.in |
+| **Members** | Param,Jay,Nishant,Smit |
 
 ---
 
