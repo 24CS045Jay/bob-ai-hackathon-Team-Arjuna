@@ -6,10 +6,10 @@ Initializes SQLite database and populates canonical Port of Arjuna vessels, bert
 from datetime import datetime, timedelta
 try:
     from .database import engine, Base, SessionLocal
-    from .models import VesselModel, BerthModel, CraneModel, ZoneTelemetryModel, OptimizationLogModel
+    from .models import VesselModel, BerthModel, CraneModel, ZoneTelemetryModel, OptimizationLogModel, UserModel
 except (ImportError, ValueError):
     from database import engine, Base, SessionLocal
-    from models import VesselModel, BerthModel, CraneModel, ZoneTelemetryModel, OptimizationLogModel
+    from models import VesselModel, BerthModel, CraneModel, ZoneTelemetryModel, OptimizationLogModel, UserModel
 
 CANONICAL_VESSELS = [
     {"vessel_id": "V-001", "name": "MSC Arjuna", "imo": "IMO9839438", "flag": "PA", "type": "Container Ship", "length_m": 399.9, "beam_m": 61.3, "draft_m": 15.5, "teu": 24000, "dwt": 228000, "status": "underway", "eta_utc": "2026-09-14T16:00:00Z", "etd_utc": "2026-09-16T08:00:00Z", "assigned_berth_id": "B01", "speed_knots": 14.2, "lat": 21.642, "lng": 72.465, "priority": 3},
@@ -63,6 +63,14 @@ INITIAL_ZONE_TELEMETRY = [
     {"zone_id": "F", "vessel_count": 4, "avg_draft_m": 9.2, "wind_knots": 12.0, "visibility_nm": 9.0, "tide_m": 3.4, "crane_util": 0.25, "yard_occ": 0.38, "congestion_index": 31.0, "risk_level": "low"},
 ]
 
+CANONICAL_USERS = [
+    {"id": "usr-1", "email": "admin@portflow.ai", "password_hash": "admin123", "name": "Captain Rajesh Sharma", "title": "Harbor Master & Operations Lead", "role_code": "admin", "department": "Marine Operations", "shift": "06:00 - 14:00 (Morning)", "avatar": "RS", "last_login": "12 min ago"},
+    {"id": "usr-2", "email": "supervisor@portflow.ai", "password_hash": "supervisor123", "name": "Ananya Patel", "title": "Senior Shift Supervisor", "role_code": "shift_supervisor", "department": "Terminal Dispatch", "shift": "14:00 - 22:00 (Evening)", "avatar": "AP", "last_login": "34 min ago"},
+    {"id": "usr-3", "email": "planner@portflow.ai", "password_hash": "planner123", "name": "Vikram Mehta", "title": "Quayside Berth Allocation Engineer", "role_code": "berth_planner", "department": "Berth Operations", "shift": "06:00 - 14:00 (Morning)", "avatar": "VM", "last_login": "1 hour ago"},
+    {"id": "usr-4", "email": "gate@portflow.ai", "password_hash": "gate123", "name": "Sunil Verma", "title": "Drayage & Gate Portal Coordinator", "role_code": "gate_controller", "department": "Landside Logistics", "shift": "22:00 - 06:00 (Night)", "avatar": "SV", "last_login": "2 hours ago"},
+    {"id": "usr-5", "email": "viewer@portflow.ai", "password_hash": "viewer123", "name": "Dr. Devendra Joshi", "title": "Maritime Authority Executive Director", "role_code": "viewer", "department": "Executive Board", "shift": "General Hours", "avatar": "DJ", "last_login": "Yesterday"},
+]
+
 
 def seed_database(db=None):
     close_db = False
@@ -100,6 +108,13 @@ def seed_database(db=None):
             for z_data in INITIAL_ZONE_TELEMETRY:
                 t = ZoneTelemetryModel(**z_data)
                 db.add(t)
+
+        existing_users = db.query(UserModel).count()
+        if existing_users == 0:
+            print("Seeding 5 canonical users...")
+            for u_data in CANONICAL_USERS:
+                u = UserModel(**u_data)
+                db.add(u)
 
         db.commit()
         print("Database seeding completed successfully.")

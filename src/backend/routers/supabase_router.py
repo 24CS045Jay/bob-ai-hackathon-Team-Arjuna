@@ -4,7 +4,8 @@ Provides API endpoints to verify Supabase connectivity, seed data, and sync reco
 """
 
 from fastapi import APIRouter, HTTPException
-from typing import Dict, Any
+from pydantic import BaseModel, EmailStr
+from typing import Dict, Any, Optional, List
 
 try:
     from ..db.supabase_client import (
@@ -12,6 +13,9 @@ try:
         check_supabase_connection,
         seed_supabase_data,
         SUPABASE_URL,
+        list_supabase_users,
+        create_user_profile,
+        authenticate_user,
     )
 except (ImportError, ValueError):
     from db.supabase_client import (
@@ -19,6 +23,9 @@ except (ImportError, ValueError):
         check_supabase_connection,
         seed_supabase_data,
         SUPABASE_URL,
+        list_supabase_users,
+        create_user_profile,
+        authenticate_user,
     )
 
 router = APIRouter(prefix="/api/supabase", tags=["Supabase Cloud Database"])
@@ -107,3 +114,79 @@ def list_supabase_telemetry():
         return {"count": len(res.data), "telemetry": res.data}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to query Supabase: {e}")
+
+
+# -----------------------------------------------------------------------------
+# User Authentication & Personnel Directory Endpoints
+# -----------------------------------------------------------------------------
+
+class UserSignupRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+    role_code: Optional[str] = "shift_supervisor"
+    title: Optional[str] = None
+    department: Optional[str] = "Terminal Dispatch"
+    shift: Optional[str] = "06:00 - 14:00 (Morning)"
+
+
+class UserLoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+@router.get("/users", summary="List registered personnel from Supabase")
+def get_all_users():
+    """Fetches all registered personnel from Supabase public.users."""
+    users = list_supabase_users()
+    return {"count": len(users), "users": users}
+
+
+@router.post("/signup", summary="Register new user profile in Supabase")
+def signup_user(req: UserSignupRequest):
+    """Registers a new user in Supabase public.users and sets operational role."""
+    import time
+    clean_email = req.email.strip().lower()
+    user_id = f"usr-{int(time.time() * 1000) % 1000000}"
+
+    # Generate initials avatar
+    parts = req.name.strip().split()
+    avatar = (parts[0][0] + (parts[1][0] if len(parts) > 1 else parts[0][1])).upper() if req.name else "OP"
+
+    user_dict = {
+        "id": user_id,
+        "email": clean_email,
+        "password_hash": req.password,
+        "name": req.name.strip(),
+        "title": req.title or f"{req.role_code.replace('_', ' ').title()} Operator",
+        "role_code": req.role_code or "shift_supervisor",
+        "department": req.department or "Terminal Dispatch",
+        "shift": req.shift or "06:00 - 14:00 (Morning)",
+        "avatar": avatar,
+        "last_login": "Just now",
+    }
+
+    result = create_user_profile(user_dict)
+    sanitized = {k: v for k, v in result.get("user", user_dict).items() if k != "password_hash"}
+    return {
+        "status": "success",
+        "message": f"User account '{clean_email}' created successfully",
+        "user": sanitized,
+    }
+
+
+@router.post("/login", summary="Authenticate credentials against Supabase")
+def login_user(req: UserLoginRequest):
+    """Verifies email and password against Supabase public.users records."""
+    user = authenticate_user(req.email, req.password)
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials. Please verify your email and passcode or register a new duty account.",
+        )
+    return {
+        "status": "success",
+        "message": f"Welcome back, {user.get('name')}!",
+        "user": user,
+    }
+

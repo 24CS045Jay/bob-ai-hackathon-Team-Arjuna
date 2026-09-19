@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { ROLES } from '../data/roles.mock.js'
 import { USERS } from '../data/users.mock.js'
+import { supabaseGetUsers } from '../api/supabaseClient.js'
 
 const RoleContext = createContext(null)
 
@@ -80,7 +81,27 @@ export function RoleProvider({ children }) {
     return ROLES
   })
 
-  const [users] = useState(USERS)
+  const [users, setUsers] = useState(USERS)
+
+  // Track the logged in user profile
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tideline_current_user')
+      if (saved) return JSON.parse(saved)
+    } catch {
+      // storage unavailable
+    }
+    return {
+      id: 'usr-2',
+      name: 'Ananya Patel',
+      email: 'supervisor@portflow.ai',
+      roleCode: 'shift_supervisor',
+      title: 'Senior Shift Supervisor',
+      department: 'Terminal Dispatch',
+      shift: '14:00 - 22:00 (Evening)',
+      avatar: 'AP'
+    }
+  })
 
   // Default to shift_supervisor for immediate rich viewing or preserve selection
   const [activeRoleCode, setActiveRoleCode] = useState(() => {
@@ -91,6 +112,33 @@ export function RoleProvider({ children }) {
     }
   })
 
+  // Synchronize users from Supabase on mount
+  const refreshUsers = async () => {
+    try {
+      const remoteUsers = await supabaseGetUsers()
+      if (remoteUsers && remoteUsers.length > 0) {
+        // Normalize fields (e.g. role_code -> roleCode)
+        const normalized = remoteUsers.map(u => ({
+          ...u,
+          roleCode: u.role_code || u.roleCode || 'shift_supervisor',
+          name: u.name,
+          email: u.email,
+          title: u.title,
+          department: u.department,
+          shift: u.shift,
+          avatar: u.avatar || (u.name ? u.name.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase() : 'OP')
+        }))
+        setUsers(normalized)
+      }
+    } catch (err) {
+      console.warn('[RoleContext] Failed to load users from Supabase:', err)
+    }
+  }
+
+  useEffect(() => {
+    refreshUsers()
+  }, [])
+
   const [lastSyncedSecondsAgo, setLastSyncedSecondsAgo] = useState(3)
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS)
   const [auditLog, setAuditLog] = useState(INITIAL_AUDIT_LOG)
@@ -99,27 +147,65 @@ export function RoleProvider({ children }) {
 
   const activeRole = roles.find((r) => r.code === activeRoleCode) || null
 
-  const login = (roleCode) => {
+  const login = (roleCode, userObj = null) => {
     setActiveRoleCode(roleCode)
     try {
       localStorage.setItem('tideline_active_role', roleCode)
     } catch {
       // ignore storage issues
     }
+
+    if (userObj) {
+      const normalizedUser = {
+        ...userObj,
+        roleCode: userObj.roleCode || userObj.role_code || roleCode,
+      }
+      setCurrentUser(normalizedUser)
+      try {
+        localStorage.setItem('tideline_current_user', JSON.stringify(normalizedUser))
+      } catch {}
+    } else {
+      // Find matching user from directory or role
+      const matched = users.find(u => u.roleCode === roleCode)
+      if (matched) {
+        setCurrentUser(matched)
+        try {
+          localStorage.setItem('tideline_current_user', JSON.stringify(matched))
+        } catch {}
+      }
+    }
+
     logAction({
       action: 'ROLE_SWITCHED',
       target: roleCode,
-      details: `Switched active perspective to ${roleCode.replace('_', ' ').toUpperCase()}`
+      details: `Authenticated perspective: ${roleCode.replace('_', ' ').toUpperCase()} (${userObj?.name || 'Authorized Personnel'})`
     })
+  }
+
+  const registerUser = (userObj) => {
+    const normalized = {
+      ...userObj,
+      roleCode: userObj.roleCode || userObj.role_code || 'shift_supervisor',
+      avatar: userObj.avatar || (userObj.name ? userObj.name.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase() : 'OP')
+    }
+    setUsers(prev => [normalized, ...prev.filter(u => u.email !== normalized.email)])
+    login(normalized.roleCode, normalized)
   }
 
   const logout = () => {
     setActiveRoleCode(null)
+    setCurrentUser(null)
     try {
       localStorage.removeItem('tideline_active_role')
+      localStorage.removeItem('tideline_current_user')
     } catch {
       // ignore
     }
+    logAction({
+      action: 'SESSION_TERMINATED',
+      target: 'Terminal Auth',
+      details: 'Station operator logged out successfully.'
+    })
   }
 
   const can = (permissionKey) => {
@@ -237,6 +323,9 @@ export function RoleProvider({ children }) {
       value={{
         roles,
         users,
+        currentUser,
+        registerUser,
+        refreshUsers,
         activeRole,
         login,
         logout,
