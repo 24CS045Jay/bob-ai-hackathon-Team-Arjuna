@@ -206,7 +206,7 @@ npm run dev
 
 | Deliverable | Location / Link | Status |
 |---|---|---|
-| 📹 **Demo Video** | [`demo/demo-video-link.txt`](demo/demo-video-link.txt) | *https://youtu.be/Pz58w6sBimE?si=T5Drd5c3xLgH1ifC*|
+| 📹 **Demo Video** | [`demo/demo-video-link.txt`](demo/demo-video-link.txt) | *https://drive.google.com/file/d/19yt6wt5oPMEtpu2I9BH9apjRXW4BWuoU/view?usp=drive_link*|
 | 🌐 **Live Deployed App** | [`demo/live-demo-url.txt`](demo/live-demo-url.txt) | *https://bob-ai-hackathon-team-arjuna-pjsl.vercel.app/* |
 | 📊 **Presentation Slides** | [`presentation/slides.pdf`](presentation/) | *presentation/slide* |
 | 🖼️ **Screenshots** | [`demo/screenshots/`](demo/screenshots/) | Available in folder |
