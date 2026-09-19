@@ -32,6 +32,7 @@ export function OperationalProvider({ children }) {
   const [appliedDiversions, setAppliedDiversions] = useState([])
   const [approvedPlanStamp, setApprovedPlanStamp] = useState(null)
   const [activeDisruption, setActiveDisruption] = useState(null)
+  const [commercialStrategy, setCommercialStrategy] = useState('revenue_max') // 'revenue_max' or 'cost_min'
 
   // Live backend connection state & telemetry
   const [backendStatus, setBackendStatus] = useState({
@@ -124,9 +125,10 @@ export function OperationalProvider({ children }) {
       vessels,
       berths,
       cranes,
-      weatherTide
+      weatherTide,
+      commercialStrategy
     })
-  }, [vessels, berths, cranes, weatherTide])
+  }, [vessels, berths, cranes, weatherTide, commercialStrategy])
 
   // 5. Dynamic 72-Hour Port Operations Plan (Task 4)
   const activePlan = useMemo(() => {
@@ -522,6 +524,10 @@ export function OperationalProvider({ children }) {
         routingRecommendations,
         optimizerProposal,
         activePlan,
+
+        // Commercial Currency Policy & Strategy
+        commercialStrategy,
+        setCommercialStrategy,
 
         // Live Backend API state & controls
         backendStatus,

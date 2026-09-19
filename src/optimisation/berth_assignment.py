@@ -49,13 +49,14 @@ def optimize_berth_assignments(
     vessels: List[Dict[str, Any]],
     berths: Optional[List[Dict[str, Any]]] = None,
     current_time_iso: Optional[str] = None,
+    commercial_strategy: str = "revenue_max",  # "revenue_max" (hold USD vessel) or "cost_min" (clear USD vessel first)
 ) -> Dict[str, Any]:
     """
-    Greedy priority queue berth allocation.
+    Greedy priority queue berth allocation with commercial currency tariff weighting.
     Returns:
       assignments: list of assigned vessels with berth_id, start_time, end_time, dwell_hours
       waitlist: vessels waiting in anchorage
-      metrics: berth_utilization_pct, avg_waiting_time_hours
+      metrics: berth_utilization_pct, avg_waiting_time_hours, commercial_strategy
     """
     if berths is None:
         berths = [dict(b) for b in CANONICAL_BERTHS]
@@ -70,6 +71,7 @@ def optimize_berth_assignments(
 
     # Queue of vessels prioritized by:
     # Priority rank (high=3, normal=2, low=1) inverted for min-heap
+    # Commercial currency waiting rate
     # Arrival time
     # TEU descending
     pq = []
@@ -77,6 +79,16 @@ def optimize_berth_assignments(
         prio = v.get("priority", 2)
         # Priority mapping: 3 -> high, 2 -> med, 1 -> low
         prio_weight = 4 - prio  # 1 is highest priority
+
+        # Currency-based waiting tariff (USD vs VND)
+        waiting_rate = float(v.get("hourly_waiting_rate_usd", 1500) or 1500)
+        if commercial_strategy == "revenue_max":
+            # Port earns higher dollar fees while American ship waits; berth lower-tariff ships first
+            currency_weight = waiting_rate
+        else:
+            # Minimize expensive demurrage penalties; berth USD ship first
+            currency_weight = -waiting_rate
+
         try:
             arr_str = str(v.get("eta_utc", base_time.isoformat())).replace("Z", "+00:00")
             arr_dt = datetime.fromisoformat(arr_str)
@@ -86,15 +98,15 @@ def optimize_berth_assignments(
             arr_dt = base_time + timedelta(hours=idx * 2)
 
         teu = float(v.get("teu", 1000) or 1000)
-        # item in heap: (priority_weight, arrival_timestamp, -teu, index, vessel)
-        heapq.heappush(pq, (prio_weight, arr_dt.timestamp(), -teu, idx, v, arr_dt))
+        # item in heap: (prio_weight, currency_weight, arrival_timestamp, -teu, index, vessel, arr_dt)
+        heapq.heappush(pq, (prio_weight, currency_weight, arr_dt.timestamp(), -teu, idx, v, arr_dt))
 
     assigned_records = []
     unassigned = []
     total_wait_hours = 0.0
 
     while pq:
-        _, _, _, _, vessel, arr_dt = heapq.heappop(pq)
+        _, _, _, _, _, vessel, arr_dt = heapq.heappop(pq)
         v_draft = float(vessel.get("draft_m", 10.0))
         v_len = float(vessel.get("length_m", 200.0))
         v_type = vessel.get("cargo_type", "container")

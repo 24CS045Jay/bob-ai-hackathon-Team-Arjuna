@@ -6,6 +6,7 @@ import { useOperationalContext } from '../context/OperationalContext.jsx'
 import { useRole } from '../context/RoleContext.jsx'
 import Modal from '../components/common/Modal.jsx'
 import Badge from '../components/common/Badge.jsx'
+import CommercialPriorityCard from '../components/berth/CommercialPriorityCard.jsx'
 import { buttonPressInteraction } from '../utils/motion.js'
 
 export default function BerthPlannerPage() {
@@ -75,6 +76,9 @@ export default function BerthPlannerPage() {
             </span>
           </div>
         </div>
+
+        {/* Currency & Commercial Priority Solver Policy */}
+        <CommercialPriorityCard />
 
         {/* Task 3: Algorithmic Berth & Crane Optimiser Action Bar */}
         <div className="rounded-3xl border border-sky-200 dark:border-sky-900/60 bg-sky-50/60 dark:bg-sky-950/30 p-5 sm:p-6 shadow-xs space-y-4">

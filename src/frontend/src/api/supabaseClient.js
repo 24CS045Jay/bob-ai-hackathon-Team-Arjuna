@@ -1,25 +1,91 @@
 /**
  * PortFlow AI — Supabase Client & Authentication Service
- * Direct integration with Supabase Cloud PostgreSQL for user management and digital twin state.
+ * Native lightweight PostgREST client with Supabase Cloud PostgreSQL and backend API fallbacks.
  */
-
-import { createClient } from '@supabase/supabase-js'
 
 export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://gmqrrnaktdzoigbquhsp.supabase.co'
 export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_ZKrkMyN83WE1YuJKmDehcQ_BEh9_vwc'
-
-// Singleton Supabase Client instance
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-  },
-})
 
 // Backend API Base for hybrid synchronizer
 const API_BASE = import.meta.env.VITE_API_BASE_URL !== undefined
   ? import.meta.env.VITE_API_BASE_URL
   : (typeof window !== 'undefined' && window.location.port === '5173' ? '' : 'http://127.0.0.1:8000')
+
+/**
+ * Universal PostgREST fetch helper for Supabase Cloud
+ */
+async function supabaseFetch(endpoint, options = {}) {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1${endpoint}`, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': options.method === 'POST' ? 'return=representation' : undefined,
+        ...options.headers,
+      },
+      ...options,
+    })
+    if (!res.ok) {
+      return { data: null, error: new Error(`Supabase HTTP ${res.status}`) }
+    }
+    const data = await res.json()
+    return { data, error: null }
+  } catch (err) {
+    return { data: null, error: err }
+  }
+}
+
+/**
+ * Zero-dependency Supabase Query Builder compatible with @supabase/supabase-js
+ */
+export const supabase = {
+  from(table) {
+    return {
+      select(columns = '*') {
+        const fetchAll = () => supabaseFetch(`/${table}?select=${encodeURIComponent(columns)}`)
+        return {
+          order(col, { ascending = true } = {}) {
+            return supabaseFetch(`/${table}?select=${encodeURIComponent(columns)}&order=${col}.${ascending ? 'asc' : 'desc'}`)
+          },
+          ilike(col, val) {
+            return {
+              limit(n) {
+                return supabaseFetch(`/${table}?select=${encodeURIComponent(columns)}&${col}=ilike.${encodeURIComponent(val)}&limit=${n}`)
+              }
+            }
+          },
+          eq(col, val) {
+            return supabaseFetch(`/${table}?select=${encodeURIComponent(columns)}&${col}=eq.${encodeURIComponent(val)}`)
+          },
+          then(resolve, reject) {
+            return fetchAll().then(resolve, reject)
+          }
+        }
+      },
+      insert(rows) {
+        return {
+          select() {
+            return supabaseFetch(`/${table}`, {
+              method: 'POST',
+              body: JSON.stringify(rows),
+            })
+          }
+        }
+      },
+      update(values) {
+        return {
+          eq(col, val) {
+            return supabaseFetch(`/${table}?${col}=eq.${encodeURIComponent(val)}`, {
+              method: 'PATCH',
+              body: JSON.stringify(values),
+            })
+          }
+        }
+      }
+    }
+  }
+}
 
 /**
  * Fetch all registered users from Supabase or backend fallback.
@@ -78,11 +144,9 @@ export async function supabaseSignUp({ email, password, name, roleCode, title, d
   }
 
   // 1. Attempt direct insert to Supabase public.users
-  let directSuccess = false
   try {
     const { data, error } = await supabase.from('users').insert([payload]).select()
     if (!error && data && data.length > 0) {
-      directSuccess = true
       const user = data[0]
       delete user.password_hash
       return { success: true, user, source: 'supabase_direct' }
