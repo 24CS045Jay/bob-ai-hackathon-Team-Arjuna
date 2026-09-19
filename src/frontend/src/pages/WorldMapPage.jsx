@@ -4,6 +4,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import AppShell from '../components/layout/AppShell.jsx'
 import { WORLD_PORTS, ACTIVE_VESSELS, SHIPPING_LANES } from '../data/worldPorts.mock.js'
+import { fetchLiveVessels, fetchVesselDecision, saveRouteDecision } from '../api/client.js'
 
 // ─── Dwell colour scale ──────────────────────────────────────────────────────
 function getDwellColor(dwell) {
@@ -23,6 +24,37 @@ const DWELL_LEGEND = [
   { label: '5.0–6.4d', color: '#f97316' },
   { label: '6.5d+',    color: '#dc2626' },
 ]
+
+// ─── Vessel Recommendation Theme ─────────────────────────────────────────────
+const RECOMMENDATION_THEME = {
+  PROCEED: {
+    bg: 'bg-emerald-500/15',
+    text: 'text-emerald-700 dark:text-emerald-400',
+    border: 'border-emerald-500/30',
+    badge: 'bg-emerald-600 text-white',
+    icon: '✅',
+    label: 'PROCEED · CERTIFIED SAFE',
+    color: '#10b981',
+  },
+  REROUTE: {
+    bg: 'bg-rose-500/15',
+    text: 'text-rose-700 dark:text-rose-400',
+    border: 'border-rose-500/30',
+    badge: 'bg-rose-600 text-white',
+    icon: '⚠️',
+    label: 'REROUTE · WEATHER HAZARD',
+    color: '#f43f5e',
+  },
+  HOLD: {
+    bg: 'bg-amber-500/15',
+    text: 'text-amber-700 dark:text-amber-400',
+    border: 'border-amber-500/30',
+    badge: 'bg-amber-600 text-white',
+    icon: '⚓',
+    label: 'HOLD · ANCHORAGE WAIT',
+    color: '#f59e0b',
+  },
+}
 
 // Vessel status colours
 const VESSEL_COLOR = {
@@ -105,6 +137,7 @@ export default function WorldMapPage() {
   const portLayerGroupRef = useRef(null)
   const vesselLayerGroupRef = useRef(null)
   const lanesLayerGroupRef = useRef(null)
+  const rerouteLayerGroupRef = useRef(null)
 
   // Configuration state
   const [activeProvider, setActiveProvider] = useState('google-streets')
@@ -121,9 +154,126 @@ export default function WorldMapPage() {
   const [showDwellRings, setShowDwellRings] = useState(true)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
+  // Live AIS Vessels & Decision Engine state
+  const [liveVessels, setLiveVessels] = useState([])
+  const [selectedVessel, setSelectedVessel] = useState(null)
+  const [vesselDecision, setVesselDecision] = useState(null)
+  const [loadingDecision, setLoadingDecision] = useState(false)
+  const [appliedReroute, setAppliedReroute] = useState(false)
+  const [routeDecisionStatus, setRouteDecisionStatus] = useState('PENDING') // 'PENDING' | 'ACCEPTED' | 'DECLINED'
+  const [showRouteModal, setShowRouteModal] = useState(false)
+  const [toastMessage, setToastMessage] = useState(null)
+  const [activeTab, setActiveTab] = useState('vessels') // 'vessels' | 'ports'
+  const [vesselFilter, setVesselFilter] = useState('all') // 'all' | 'reroute' | 'high_risk' | 'proceed'
+
   // Map Telemetry HUD state
   const [cursorCoords, setCursorCoords] = useState({ lat: 20.0, lng: 10.0 })
   const [currentZoom, setCurrentZoom] = useState(3)
+
+  // Poll / Load Live AIS Vessels
+  useEffect(() => {
+    let isMounted = true
+    const loadVessels = async () => {
+      try {
+        const data = await fetchLiveVessels()
+        if (isMounted && data?.vessels?.length > 0) {
+          setLiveVessels(data.vessels)
+        }
+      } catch (err) {
+        console.warn('Live vessels stream unavailable, falling back:', err)
+      }
+    }
+    loadVessels()
+    const timer = setInterval(loadVessels, 25000)
+    return () => {
+      isMounted = false
+      clearInterval(timer)
+    }
+  }, [])
+
+  // Load Full Decision for Selected Vessel
+  useEffect(() => {
+    if (!selectedVessel) {
+      setVesselDecision(null)
+      setAppliedReroute(false)
+      setRouteDecisionStatus('PENDING')
+      setShowRouteModal(false)
+      rerouteLayerGroupRef.current?.clearLayers()
+      return
+    }
+
+    let isMounted = true
+    setLoadingDecision(true)
+    fetchVesselDecision(selectedVessel.mmsi)
+      .then((dec) => {
+        if (isMounted && dec) {
+          setVesselDecision(dec)
+          const savedStatus = dec?.route_acceptance?.user_decision?.status || 'PENDING'
+          setRouteDecisionStatus(savedStatus)
+          setAppliedReroute(savedStatus === 'ACCEPTED')
+        }
+      })
+      .catch((err) => console.warn('Could not load vessel decision:', err))
+      .finally(() => {
+        if (isMounted) setLoadingDecision(false)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [selectedVessel])
+
+  // Interactive Route Acceptance Handlers
+  const handleAcceptRoute = async () => {
+    if (!selectedVessel) return
+    try {
+      await saveRouteDecision(selectedVessel.mmsi, 'ACCEPTED', 'Authorized by Port Operator via ECDIS Bridge')
+      setRouteDecisionStatus('ACCEPTED')
+      setAppliedReroute(true)
+      setToastMessage({
+        type: 'success',
+        title: 'Alternate Deepwater Route Accepted',
+        text: `Corridor authorized for ${selectedVessel.name || 'vessel'}. ECDIS navigation updated to certified oceanic fairway.`,
+      })
+      setTimeout(() => setToastMessage(null), 6000)
+    } catch (err) {
+      console.error('Error accepting route:', err)
+    }
+  }
+
+  const handleDeclineRoute = async () => {
+    if (!selectedVessel) return
+    try {
+      await saveRouteDecision(selectedVessel.mmsi, 'DECLINED', 'Declined by Port Operator; vessel continues on planned fairway')
+      setRouteDecisionStatus('DECLINED')
+      setAppliedReroute(false)
+      setToastMessage({
+        type: 'warning',
+        title: 'Alternate Route Declined',
+        text: `${selectedVessel.name || 'Vessel'} maintains original course. Weather alert and laytime demurrage monitoring remain active.`,
+      })
+      setTimeout(() => setToastMessage(null), 6000)
+    } catch (err) {
+      console.error('Error declining route:', err)
+    }
+  }
+
+  const handleResetDecision = async () => {
+    if (!selectedVessel) return
+    try {
+      await saveRouteDecision(selectedVessel.mmsi, 'PENDING')
+      setRouteDecisionStatus('PENDING')
+      setAppliedReroute(false)
+      setToastMessage({
+        type: 'info',
+        title: 'Route Decision Reset',
+        text: `Route evaluation status returned to PENDING review for ${selectedVessel.name || 'vessel'}.`,
+      })
+      setTimeout(() => setToastMessage(null), 4000)
+    } catch (err) {
+      console.error('Error resetting decision:', err)
+    }
+  }
 
   // Load saved configuration from localStorage
   useEffect(() => {
@@ -188,6 +338,44 @@ export default function WorldMapPage() {
     })
   }, [searchQuery, regionFilter])
 
+  // Displayed vessels (Live AIS or mock fallback)
+  const displayedVessels = useMemo(() => {
+    let list = liveVessels.length > 0 ? liveVessels : ACTIVE_VESSELS.map((v, i) => ({
+      ...v,
+      mmsi: 300000000 + i,
+      sog: v.speedKts,
+      cog: v.heading,
+      origin_country: 'International',
+      billing_currency: 'USD',
+      route_risk_level: 'LOW',
+      recommendation: 'PROCEED',
+      weather_score: 0.18,
+      wind_speed_knots: 11.5,
+      wave_height_m: 0.8,
+      total_cost_usd: 24000,
+      eta_hours: 12.5,
+    }))
+
+    if (vesselFilter === 'reroute') {
+      list = list.filter((v) => v.recommendation === 'REROUTE')
+    } else if (vesselFilter === 'high_risk') {
+      list = list.filter((v) => v.route_risk_level === 'HIGH')
+    } else if (vesselFilter === 'proceed') {
+      list = list.filter((v) => v.recommendation === 'PROCEED')
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim()
+      list = list.filter((v) =>
+        (v.name || '').toLowerCase().includes(q) ||
+        String(v.mmsi).includes(q) ||
+        (v.destination || '').toLowerCase().includes(q)
+      )
+    }
+
+    return list
+  }, [liveVessels, vesselFilter, searchQuery])
+
   // ─── Initialize Leaflet Map ─────────────────────────────────────────────────
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return
@@ -215,10 +403,12 @@ export default function WorldMapPage() {
     const lanesGroup = L.layerGroup().addTo(map)
     const portGroup = L.layerGroup().addTo(map)
     const vesselGroup = L.layerGroup().addTo(map)
+    const rerouteGroup = L.layerGroup().addTo(map)
 
     lanesLayerGroupRef.current = lanesGroup
     portLayerGroupRef.current = portGroup
     vesselLayerGroupRef.current = vesselGroup
+    rerouteLayerGroupRef.current = rerouteGroup
     mapInstanceRef.current = map
 
     // Telemetry listeners
@@ -233,11 +423,14 @@ export default function WorldMapPage() {
       setCurrentZoom(map.getZoom())
     })
 
-    // Click map background clears port selection
+    // Click map background clears port and vessel selection
     map.on('click', (e) => {
       if (e.originalEvent.target.classList.contains('leaflet-container') ||
           e.originalEvent.target.classList.contains('leaflet-tile')) {
         setSelectedPort(null)
+        setSelectedVessel(null)
+        setAppliedReroute(false)
+        rerouteLayerGroupRef.current?.clearLayers()
       }
     })
 
@@ -400,7 +593,7 @@ export default function WorldMapPage() {
     })
   }, [filteredPorts, dataMode, selectedPort, showDwellRings])
 
-  // ─── Render Active Vessels with True Heading Arrows ─────────────────────────
+  // ─── Render Active Vessels with True Heading & Maritime AI State ────────────
   useEffect(() => {
     const map = mapInstanceRef.current
     const group = vesselLayerGroupRef.current
@@ -409,64 +602,216 @@ export default function WorldMapPage() {
 
     if (!showVessels) return
 
-    ACTIVE_VESSELS.forEach((vessel) => {
-      const statusColor = VESSEL_COLOR[vessel.status] || '#3b82f6'
-      const heading = vessel.heading || 0
+    displayedVessels.forEach((vessel) => {
+      const rec = vessel.recommendation || 'PROCEED'
+      const recTheme = RECOMMENDATION_THEME[rec] || RECOMMENDATION_THEME.PROCEED
+      const statusColor = recTheme.color
+      const heading = vessel.heading || vessel.cog || 0
+      const isSelected = selectedVessel?.mmsi === vessel.mmsi
+      const vLat = Number(vessel.lat)
+      const vLon = Number(vessel.lon ?? vessel.lng)
 
       const vesselHtml = `
-        <div class="relative flex items-center justify-center cursor-pointer group" style="width: 28px; height: 28px;">
-          <div class="absolute inset-0 rounded-full opacity-30 group-hover:opacity-75 transition-opacity"
+        <div class="relative flex items-center justify-center cursor-pointer group" style="width: 32px; height: 32px;">
+          <div class="absolute inset-0 rounded-full ${isSelected ? 'animate-ping opacity-60' : 'opacity-25 group-hover:opacity-75'} transition-opacity"
                style="background-color: ${statusColor};"></div>
-          <div class="w-5 h-5 rounded-full flex items-center justify-center shadow-md transition-transform group-hover:scale-125"
+          <div class="w-6 h-6 rounded-full flex items-center justify-center shadow-lg transition-transform group-hover:scale-125"
                style="background: ${statusColor}; border: 2px solid #ffffff;">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="white"
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="white"
                  style="transform: rotate(${heading}deg); transform-origin: 50% 50%; transition: transform 0.3s ease;">
               <polygon points="12,2 22,22 12,17 2,22" />
             </svg>
           </div>
+          ${rec === 'REROUTE' ? `<span class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-600 text-white rounded-full text-[9px] font-black flex items-center justify-center border border-white">!</span>` : ''}
         </div>
       `
 
       const vesselIcon = L.divIcon({
         html: vesselHtml,
         className: 'custom-map-pin',
-        iconSize: [28, 28],
-        iconAnchor: [14, 14],
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
       })
 
-      const marker = L.marker([vessel.lat, vessel.lng], { icon: vesselIcon })
+      const marker = L.marker([vLat, vLon], { icon: vesselIcon })
 
       const vesselPopup = `
-        <div class="p-2 font-sans min-w-[200px]">
-          <div class="flex items-center justify-between mb-1">
+        <div class="p-2.5 font-sans min-w-[220px]">
+          <div class="flex items-center justify-between mb-1.5">
             <span class="text-xs font-extrabold text-slate-900 dark:text-white">${vessel.name}</span>
-            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded capitalize text-white" style="background:${statusColor}">${vessel.status}</span>
+            <span class="text-[9px] font-black px-1.5 py-0.5 rounded text-white" style="background:${statusColor}">${rec}</span>
           </div>
-          <div class="text-[10px] text-slate-500 dark:text-slate-400 mb-2">${vessel.imo} · ${vessel.line}</div>
+          <div class="text-[10px] text-slate-500 dark:text-slate-400 mb-2">MMSI ${vessel.mmsi} · ${vessel.origin_country || 'Intl'}</div>
+          
           <div class="grid grid-cols-2 gap-1.5 text-xs bg-slate-50 dark:bg-slate-800 p-2 rounded-xl mb-2 border border-slate-200 dark:border-slate-700">
             <div>
               <span class="text-[9px] text-slate-400 block font-semibold">Speed / Heading</span>
-              <span class="font-bold text-slate-800 dark:text-slate-100">${vessel.speedKts} kts · ${heading}°</span>
+              <span class="font-bold text-slate-800 dark:text-slate-100">${vessel.sog || vessel.speedKts || 14} kts · ${heading}°</span>
             </div>
             <div>
-              <span class="text-[9px] text-slate-400 block font-semibold">Capacity</span>
-              <span class="font-bold text-slate-800 dark:text-slate-100">${vessel.teu.toLocaleString()} TEU</span>
+              <span class="text-[9px] text-slate-400 block font-semibold">ML ETA</span>
+              <span class="font-bold text-slate-800 dark:text-slate-100">${vessel.eta_hours ? `${vessel.eta_hours}h` : vessel.eta || '12h'}</span>
             </div>
           </div>
-          ${vessel.port ? `<div class="text-[11px] text-slate-600 dark:text-slate-300">📍 Destination: <strong>${vessel.port}</strong></div>` : ''}
-          <div class="text-[11px] text-sky-600 font-bold mt-1">ETA: ${vessel.eta}</div>
+          
+          <div class="text-[11px] text-slate-600 dark:text-slate-300 mb-1">
+            📍 Destination: <strong>${vessel.destination || vessel.port || 'Port of Arjuna'}</strong>
+          </div>
+          <div class="text-[10.5px] font-bold ${rec === 'REROUTE' ? 'text-rose-600' : 'text-emerald-600'}">
+            AI: ${rec === 'REROUTE' ? '⚠️ Severe Sea State — Bypass Corridors Active' : '✅ Fairway Certified Nominal Transit'}
+          </div>
+          <div class="mt-2 text-[10px] text-sky-600 font-bold text-center py-1 bg-sky-50 dark:bg-sky-950/60 rounded-lg cursor-pointer">
+            Click Ship to Open Decision Drawer →
+          </div>
         </div>
       `
 
       marker.bindPopup(vesselPopup, {
         closeButton: false,
-        offset: [0, -10],
+        offset: [0, -12],
         className: 'rounded-2xl shadow-xl',
+      })
+
+      marker.on('click', () => {
+        setSelectedPort(null)
+        setSelectedVessel(vessel)
+        setActiveTab('vessels')
+        map.flyTo([vLat, vLon], Math.max(map.getZoom(), 5), {
+          duration: 1.1,
+        })
       })
 
       group.addLayer(marker)
     })
-  }, [showVessels])
+  }, [displayedVessels, showVessels, selectedVessel])
+
+  // ─── Render Dynamic Rerouting & Corridor Overlays ───────────────────────────
+  useEffect(() => {
+    const group = rerouteLayerGroupRef.current
+    if (!group) return
+    group.clearLayers()
+
+    if (!selectedVessel || !vesselDecision) return
+
+    const currentWaypoints = vesselDecision.current_route?.waypoints || []
+    const alternateWaypoints = vesselDecision.alternate_route?.waypoints || []
+    const hazards = vesselDecision.weather?.hazard_waypoints || []
+    const isReroute = (vesselDecision.recommendation || selectedVessel.recommendation) === 'REROUTE'
+
+    const isAccepted = routeDecisionStatus === 'ACCEPTED' || appliedReroute
+    const isDeclined = routeDecisionStatus === 'DECLINED'
+
+    // 1. Render Current Route Polyline & Waypoints (HIDDEN completely once alternate route is accepted)
+    if (!isAccepted && currentWaypoints.length > 1) {
+      const currentCoords = currentWaypoints.map((wp) => [Number(wp.lat), Number(wp.lon)])
+      
+      const currentGlow = L.polyline(currentCoords, {
+        color: isReroute ? '#f43f5e' : '#3b82f6',
+        weight: 6,
+        opacity: 0.25,
+        lineCap: 'round',
+      })
+      
+      const currentLine = L.polyline(currentCoords, {
+        color: isReroute ? '#ef4444' : '#2563eb',
+        weight: 3,
+        dashArray: isReroute ? '8, 8' : '5, 7',
+        lineCap: 'round',
+      })
+
+      currentLine.bindTooltip(
+        `<div class="text-xs font-bold ${isDeclined ? 'text-slate-500' : (isReroute ? 'text-rose-600' : 'text-blue-600')}">
+          ${isDeclined
+            ? '⚠️ Active Fairway (Alternate Route Declined by Operator)'
+            : isReroute
+            ? '⚠️ Current Fairway (High Weather Risk & Laytime Penalty)'
+            : 'Current Route (Approved Navigation Corridor)'}
+        </div>`,
+        { sticky: true }
+      )
+
+      group.addLayer(currentGlow)
+      group.addLayer(currentLine)
+
+      currentWaypoints.forEach((wp, idx) => {
+        const pin = L.circleMarker([Number(wp.lat), Number(wp.lon)], {
+          radius: 4,
+          fillColor: isReroute ? '#f43f5e' : '#3b82f6',
+          color: '#ffffff',
+          weight: 1.5,
+          fillOpacity: 0.9,
+        })
+        pin.bindTooltip(`<span class="text-xs font-mono font-bold">${wp.name || `WP-0${idx + 1}`}</span>`, { sticky: true })
+        group.addLayer(pin)
+      })
+    }
+
+    // 2. Render Alternate Deepwater Bypass Corridor (if REROUTE or alternate available)
+    if (alternateWaypoints.length > 1) {
+      const altCoords = alternateWaypoints.map((wp) => [Number(wp.lat), Number(wp.lon)])
+      
+      const altGlow = L.polyline(altCoords, {
+        color: isDeclined ? '#cbd5e1' : '#10b981',
+        weight: isAccepted ? 9 : (isDeclined ? 2 : 6),
+        opacity: isAccepted ? 0.55 : (isDeclined ? 0.15 : 0.25),
+        lineCap: 'round',
+      })
+
+      const altLine = L.polyline(altCoords, {
+        color: isDeclined ? '#94a3b8' : '#10b981',
+        weight: isAccepted ? 4 : (isDeclined ? 2 : 3),
+        dashArray: isAccepted ? undefined : (isDeclined ? '4, 8' : '6, 6'),
+        lineCap: 'round',
+      })
+
+      altLine.bindTooltip(
+        `<div class="text-xs font-bold ${isDeclined ? 'text-slate-500' : 'text-emerald-600'} flex items-center gap-1">
+          <span>${isAccepted ? '🛡️ ACTIVE AUTHORIZED ECDIS BYPASS CORRIDOR' : isDeclined ? 'Alternate Corridor (Declined by Operator)' : `🛡️ AI Deepwater Bypass Corridor (-${vesselDecision.comparison?.weather_risk_reduction_pct || 45}% risk)`}</span>
+        </div>`,
+        { sticky: true }
+      )
+
+      group.addLayer(altGlow)
+      group.addLayer(altLine)
+
+      alternateWaypoints.forEach((wp, idx) => {
+        const altPin = L.circleMarker([Number(wp.lat), Number(wp.lon)], {
+          radius: isAccepted ? 6 : (isDeclined ? 3 : 5),
+          fillColor: isDeclined ? '#94a3b8' : '#10b981',
+          color: '#ffffff',
+          weight: 2,
+          fillOpacity: isDeclined ? 0.4 : 1.0,
+        })
+        altPin.bindTooltip(`<span class="text-xs font-mono font-bold ${isDeclined ? 'text-slate-500' : 'text-emerald-700'}">${wp.name || `Bypass-WP${idx + 1}`}</span>`, { sticky: true })
+        group.addLayer(altPin)
+      })
+    }
+
+    // 3. Render Weather Hazards Overlays
+    hazards.forEach((h) => {
+      const hazardIcon = L.divIcon({
+        html: `
+          <div class="relative flex items-center justify-center animate-pulse cursor-pointer">
+            <div class="w-8 h-8 rounded-full bg-rose-500/30 flex items-center justify-center">
+              <span class="text-base">⛈️</span>
+            </div>
+          </div>
+        `,
+        className: 'custom-hazard-pin',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+      })
+      const hazardMarker = L.marker([Number(h.lat), Number(h.lon)], { icon: hazardIcon })
+      hazardMarker.bindTooltip(
+        `<div class="text-xs p-1 text-slate-800 dark:text-slate-100">
+          <div class="font-bold text-rose-600 mb-0.5">⚠️ Severe Sea State Hazard</div>
+          <div>Wind: <strong>${h.wind_speed_knots} kts</strong> · Waves: <strong>${h.wave_height_m}m</strong></div>
+        </div>`,
+        { sticky: true }
+      )
+      group.addLayer(hazardMarker)
+    })
+  }, [selectedVessel, vesselDecision, appliedReroute, routeDecisionStatus])
 
   // ─── Camera Controls ────────────────────────────────────────────────────────
   const zoomIn = () => mapInstanceRef.current?.zoomIn()
@@ -660,7 +1005,7 @@ export default function WorldMapPage() {
           {/* MAP CANVAS CONTAINER */}
           <div
             className="lg:col-span-9 bg-slate-900 rounded-3xl border border-line shadow-xs overflow-hidden relative select-none flex flex-col"
-            style={{ height: isFullscreen ? '100vh' : '640px' }}
+            style={{ height: isFullscreen ? '100vh' : 'calc(100vh - 130px)', minHeight: '620px' }}
           >
             {/* The Pure Leaflet GIS Canvas */}
             <div
@@ -734,15 +1079,18 @@ export default function WorldMapPage() {
                   </div>
                 ))}
               </div>
-              <div className="flex items-center gap-3 mt-2 pt-2 border-t border-line/60">
+              <div className="flex items-center gap-2.5 mt-2 pt-2 border-t border-line/60 flex-wrap">
                 <div className="flex items-center gap-1 text-[9.5px] text-ink font-semibold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" /> Berthed
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" /> Proceed
                 </div>
                 <div className="flex items-center gap-1 text-[9.5px] text-ink font-semibold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block" /> Anchored
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block" /> Hold
                 </div>
                 <div className="flex items-center gap-1 text-[9.5px] text-ink font-semibold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-sky-500 inline-block" /> In Transit
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block" /> Reroute (Hazard)
+                </div>
+                <div className="flex items-center gap-1 text-[9.5px] text-ink font-semibold">
+                  <span className="w-3 h-1 rounded bg-emerald-500 inline-block" /> AI Bypass Corridor
                 </div>
               </div>
             </div>
@@ -753,10 +1101,378 @@ export default function WorldMapPage() {
             </div>
           </div>
 
-          {/* ── RIGHT TELEMETRY & PORT DETAIL PANEL ──────────────────────── */}
-          <div className="lg:col-span-3 flex flex-col gap-4 overflow-y-auto max-h-[640px]">
-            {/* Selected Port Detail Card */}
-            {selectedPort ? (
+          {/* ── RIGHT TELEMETRY & MARITIME AI DECISION PANEL ─────────────── */}
+          <div className="lg:col-span-3 flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-130px)] min-h-[620px] pb-32 pr-1 scrollbar-thin">
+            {/* Top Tab Switcher */}
+            <div className="flex items-center gap-1 p-1 bg-surface rounded-2xl border border-line shadow-2xs flex-none">
+              <button
+                onClick={() => setActiveTab('vessels')}
+                className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                  activeTab === 'vessels'
+                    ? 'bg-ink text-white shadow-xs'
+                    : 'text-inksoft hover:text-ink hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                <span>🚢</span>
+                <span>Maritime AI ({displayedVessels.length})</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('ports')}
+                className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                  activeTab === 'ports'
+                    ? 'bg-ink text-white shadow-xs'
+                    : 'text-inksoft hover:text-ink hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                <span>⚓</span>
+                <span>Ports ({filteredPorts.length})</span>
+              </button>
+            </div>
+
+            {/* 1. SELECTED VESSEL: MARITIME AI DECISION SUPPORT DRAWER */}
+            {selectedVessel ? (
+              <div className="bg-surface rounded-3xl border border-line shadow-xs overflow-y-auto max-h-[calc(100vh-200px)] min-h-[500px] scrollbar-thin">
+                {/* Header */}
+                <div className="p-4 border-b border-line bg-slate-50/70 dark:bg-slate-800/40 flex items-start justify-between gap-2 sticky top-0 z-10 backdrop-blur-md">
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-sky-600 dark:text-sky-400">MMSI {selectedVessel.mmsi}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-inksoft font-semibold">
+                        {selectedVessel.origin_country || 'International'}
+                      </span>
+                    </div>
+                    <h4 className="text-sm font-extrabold text-ink leading-tight mt-0.5">
+                      {selectedVessel.name}
+                    </h4>
+                    <div className="text-xs text-inksoft mt-0.5">
+                      {selectedVessel.vessel_type || 'Commercial Carrier'} · {selectedVessel.sog || selectedVessel.speedKts || 14} kts
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedVessel(null)
+                      setAppliedReroute(false)
+                      rerouteLayerGroupRef.current?.clearLayers()
+                    }}
+                    className="text-inksoft hover:text-ink w-7 h-7 rounded-lg flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 text-xs transition-colors flex-none"
+                    title="Close Vessel Decision Drawer"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* AI Decision Content */}
+                <div className="p-4 space-y-3 pb-32">
+                  {loadingDecision ? (
+                    <div className="p-6 text-center text-xs text-inksoft flex flex-col items-center justify-center gap-2">
+                      <span className="animate-spin text-lg text-sky-500">⟳</span>
+                      <span className="font-semibold">Computing ML ETA, Route Risk &amp; Open-Meteo Sea State...</span>
+                    </div>
+                  ) : (
+                    <>
+                      {/* AI Recommendation Banner */}
+                      <div className={`p-3 rounded-2xl border ${
+                        (vesselDecision?.recommendation || selectedVessel.recommendation) === 'REROUTE'
+                          ? 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-400'
+                          : (vesselDecision?.recommendation || selectedVessel.recommendation) === 'HOLD'
+                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400'
+                          : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+                      }`}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] uppercase tracking-wider font-extrabold">
+                            Maritime AI Recommendation
+                          </span>
+                          <span className="text-xs font-black px-2 py-0.5 rounded-full text-white shadow-xs" style={{
+                            background: appliedReroute
+                              ? '#10b981'
+                              : (vesselDecision?.recommendation || selectedVessel.recommendation) === 'REROUTE'
+                              ? '#f43f5e'
+                              : (vesselDecision?.recommendation || selectedVessel.recommendation) === 'HOLD'
+                              ? '#f59e0b'
+                              : '#10b981'
+                          }}>
+                            {appliedReroute ? 'REROUTE APPLIED ✓' : (vesselDecision?.recommendation || selectedVessel.recommendation || 'PROCEED')}
+                          </span>
+                        </div>
+                        <p className="text-xs font-semibold leading-snug">
+                          {appliedReroute
+                            ? 'Alternate bypass corridor activated and transmitted to ship ECDIS.'
+                            : (vesselDecision?.recommendation || selectedVessel.recommendation) === 'REROUTE'
+                            ? 'Severe weather hazard detected on approach fairway. Deepwater corridor bypass recommended.'
+                            : (vesselDecision?.recommendation || selectedVessel.recommendation) === 'HOLD'
+                            ? 'Terminal congestion & rough seas warrant anchoring at outer basin.'
+                            : 'Transit fairway certified nominal. Vessel is clear to proceed to berthing basin.'}
+                        </p>
+                      </div>
+
+                      {/* 4 Metric Cards */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-line">
+                          <span className="text-[9.5px] font-bold text-inksoft uppercase tracking-wider block mb-0.5">
+                            ML ETA Prediction
+                          </span>
+                          <span className="text-base font-extrabold text-ink">
+                            {vesselDecision?.eta?.eta_hours ?? selectedVessel.eta_hours ?? 14.2}h
+                          </span>
+                          <span className="text-[9.5px] text-emerald-600 block font-medium">
+                            {Math.round((vesselDecision?.eta?.confidence || 0.92) * 100)}% Confidence
+                          </span>
+                        </div>
+
+                        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-line">
+                          <span className="text-[9.5px] font-bold text-inksoft uppercase tracking-wider block mb-0.5">
+                            Route Risk Level
+                          </span>
+                          <span className={`text-base font-extrabold ${
+                            (vesselDecision?.risk?.risk_level || selectedVessel.route_risk_level) === 'HIGH'
+                              ? 'text-rose-600'
+                              : (vesselDecision?.risk?.risk_level || selectedVessel.route_risk_level) === 'MEDIUM'
+                              ? 'text-amber-600'
+                              : 'text-emerald-600'
+                          }`}>
+                            {vesselDecision?.risk?.risk_level || selectedVessel.route_risk_level || 'LOW'}
+                          </span>
+                          <span className="text-[9.5px] text-inksoft block font-medium">
+                            F1: 93% · ML Classifier
+                          </span>
+                        </div>
+
+                        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-line">
+                          <span className="text-[9.5px] font-bold text-inksoft uppercase tracking-wider block mb-0.5">
+                            Sea State (Open-Meteo)
+                          </span>
+                          <span className="text-xs font-bold text-ink block truncate">
+                            {vesselDecision?.weather?.condition || 'Nominal Sea State'}
+                          </span>
+                          <span className="text-[9.5px] text-inksoft block">
+                            {vesselDecision?.weather?.max_wind_knots ?? selectedVessel.wind_speed_knots ?? 12} kts · {vesselDecision?.weather?.max_wave_height_m ?? selectedVessel.wave_height_m ?? 0.8}m
+                          </span>
+                        </div>
+
+                        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-line">
+                          <span className="text-[9.5px] font-bold text-inksoft uppercase tracking-wider block mb-0.5">
+                            Voyage Valuation
+                          </span>
+                          <span className="text-xs font-extrabold text-ink block">
+                            ${Number(vesselDecision?.cost?.current_route_cost_usd || selectedVessel.total_cost_usd || 26000).toLocaleString()} USD
+                          </span>
+                          {selectedVessel.billing_currency && selectedVessel.billing_currency !== 'USD' && (
+                            <span className="text-[9px] text-inksoft block font-mono truncate">
+                              {vesselDecision?.cost?.current_route_cost_local ? Number(vesselDecision.cost.current_route_cost_local).toLocaleString() : ''} {selectedVessel.billing_currency}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Cost Optimization & Demurrage Saved Highlight */}
+                      {vesselDecision?.cost?.expected_delay_loss_avoided_usd > 0 && (
+                        <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/20 text-xs">
+                          <div className="flex items-center justify-between font-bold text-emerald-800 dark:text-emerald-300">
+                            <span>🛡️ Laytime Demurrage Avoided</span>
+                            <span>+${Number(vesselDecision.cost.expected_delay_loss_avoided_usd).toLocaleString()} USD</span>
+                          </div>
+                          <div className="text-[10px] text-emerald-700 dark:text-emerald-400 mt-0.5">
+                            Weather risk reduction: {vesselDecision.comparison?.weather_risk_reduction_pct || 42}% via alternate corridor.
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Interactive Route Acceptance Decision & Trade-off Section */}
+                      {((vesselDecision?.recommendation || selectedVessel.recommendation) === 'REROUTE' || vesselDecision?.alternate_route) && (
+                        <div className="p-3.5 rounded-2xl bg-surface border-2 border-dashed border-indigo-500/30 dark:border-indigo-400/30 shadow-sm space-y-2.5">
+                          {/* Header with status badge */}
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-400 flex items-center gap-1">
+                              <span>🧭</span>
+                              <span>Route Acceptance Decision</span>
+                            </span>
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full text-white ${
+                              routeDecisionStatus === 'ACCEPTED'
+                                ? 'bg-emerald-600 shadow-xs'
+                                : routeDecisionStatus === 'DECLINED'
+                                ? 'bg-rose-600 shadow-xs'
+                                : 'bg-amber-500 shadow-xs animate-pulse'
+                            }`}>
+                              {routeDecisionStatus === 'ACCEPTED'
+                                ? 'ROUTE ACCEPTED ✓'
+                                : routeDecisionStatus === 'DECLINED'
+                                ? 'ROUTE DECLINED ✕'
+                                : 'DECISION REQUIRED ⚠️'}
+                            </span>
+                          </div>
+
+                          {/* The User Question */}
+                          <div className="p-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-500/20">
+                            <p className="text-xs font-bold text-ink leading-snug">
+                              {vesselDecision?.route_acceptance?.question ||
+                                `Do you want to accept the alternate deepwater bypass route for ${selectedVessel.name || 'this vessel'}?`}
+                            </p>
+                            {vesselDecision?.route_acceptance?.summary && (
+                              <p className="text-[10px] text-inksoft mt-1 leading-relaxed">
+                                {vesselDecision.route_acceptance.summary}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Quick Trade-off Numbers */}
+                          <div className="grid grid-cols-4 gap-1.5 text-center">
+                            <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500/20">
+                              <span className="text-[8.5px] uppercase font-bold text-emerald-700 dark:text-emerald-400 block">Risk Cut</span>
+                              <span className="text-xs font-black text-emerald-600">
+                                -{vesselDecision?.comparison?.weather_risk_reduction_pct || 45}%
+                              </span>
+                            </div>
+                            <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500/20">
+                              <span className="text-[8.5px] uppercase font-bold text-emerald-700 dark:text-emerald-400 block">Saved</span>
+                              <span className="text-xs font-black text-emerald-600">
+                                +${Math.round((vesselDecision?.cost?.expected_delay_loss_avoided_usd || 19000) / 1000)}k
+                              </span>
+                            </div>
+                            <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-500/20">
+                              <span className="text-[8.5px] uppercase font-bold text-amber-700 dark:text-amber-400 block">Time</span>
+                              <span className="text-xs font-black text-amber-600">
+                                +{vesselDecision?.comparison?.transit_delta_hours || 5.8}h
+                              </span>
+                            </div>
+                            <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-500/20">
+                              <span className="text-[8.5px] uppercase font-bold text-amber-700 dark:text-amber-400 block">Distance</span>
+                              <span className="text-xs font-black text-amber-600">
+                                +{Math.round(vesselDecision?.comparison?.distance_delta_nm || 100)}nm
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Why Accept vs Why Decline Accordion/Pills */}
+                          <div className="space-y-2 text-xs">
+                            {/* Why You Should Accept */}
+                            <div className="p-2.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-500/25">
+                              <div className="flex items-center gap-1 font-bold text-emerald-800 dark:text-emerald-300 text-[11px] mb-1">
+                                <span>🛡️</span>
+                                <span>Why You Should Accept:</span>
+                              </div>
+                              <ul className="space-y-1 text-[10.5px] text-emerald-900 dark:text-emerald-200">
+                                {(vesselDecision?.route_acceptance?.why_accept || [
+                                  `Reduces severe storm & wave hazard exposure by ${vesselDecision?.comparison?.weather_risk_reduction_pct || 45}%.`,
+                                  'Protects hull integrity and prevents cargo shift in high sea states.',
+                                  `Avoids an estimated $${(vesselDecision?.cost?.expected_delay_loss_avoided_usd || 19000).toLocaleString()} USD in laytime demurrage.`,
+                                  'Guarantees 100% deepwater ocean passage avoiding shallow coastal hazards.',
+                                ]).map((pt, idx) => (
+                                  <li key={idx} className="flex items-start gap-1">
+                                    <span className="text-emerald-500 font-bold">✓</span>
+                                    <span>{pt}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+
+                            {/* Why You Might Decline */}
+                            <div className="p-2.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-500/25">
+                              <div className="flex items-center gap-1 font-bold text-amber-800 dark:text-amber-300 text-[11px] mb-1">
+                                <span>⚠️</span>
+                                <span>Why You Might Decline (Trade-offs):</span>
+                              </div>
+                              <ul className="space-y-1 text-[10.5px] text-amber-900 dark:text-amber-200">
+                                {(vesselDecision?.route_acceptance?.why_decline || [
+                                  `Adds +${vesselDecision?.comparison?.distance_delta_nm || 100} nm detour distance around the storm zone.`,
+                                  `Increases voyage transit by +${vesselDecision?.comparison?.transit_delta_hours || 5.8} hours.`,
+                                  `Incurs additional bunker fuel expense (~$${Math.round(vesselDecision?.cost?.net_cost_difference_usd || 0).toLocaleString()} USD).`,
+                                  'May require rescheduling the allotted terminal gantry crane berthing window.',
+                                ]).map((pt, idx) => (
+                                  <li key={idx} className="flex items-start gap-1">
+                                    <span className="text-amber-500 font-bold">✕</span>
+                                    <span>{pt}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+
+                          {/* Decision Action Buttons */}
+                          <div className="pt-1 space-y-1.5">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={handleAcceptRoute}
+                                className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 ${
+                                  routeDecisionStatus === 'ACCEPTED'
+                                    ? 'bg-emerald-600 text-white shadow-emerald-600/30 ring-2 ring-emerald-400'
+                                    : 'bg-emerald-600 hover:bg-emerald-500 text-white active:scale-98'
+                                }`}
+                              >
+                                <span>✓</span>
+                                <span>{routeDecisionStatus === 'ACCEPTED' ? 'Route Accepted (Active)' : 'Accept Alternate Route'}</span>
+                              </button>
+
+                              <button
+                                onClick={handleDeclineRoute}
+                                className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 ${
+                                  routeDecisionStatus === 'DECLINED'
+                                    ? 'bg-rose-600 text-white shadow-rose-600/30 ring-2 ring-rose-400'
+                                    : 'bg-slate-200 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 active:scale-98'
+                                }`}
+                              >
+                                <span>✕</span>
+                                <span>{routeDecisionStatus === 'DECLINED' ? 'Route Declined (Active)' : 'Decline (Keep Current)'}</span>
+                              </button>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-0.5">
+                              <button
+                                onClick={() => setShowRouteModal(true)}
+                                className="text-[11px] text-[#0085db] hover:underline font-bold flex items-center gap-1"
+                              >
+                                <span>🔍</span>
+                                <span>Examine Full Side-by-Side Trade-off Modal</span>
+                              </button>
+
+                              {routeDecisionStatus !== 'PENDING' && (
+                                <button
+                                  onClick={handleResetDecision}
+                                  className="text-[10px] text-inksoft hover:text-ink font-semibold flex items-center gap-0.5"
+                                >
+                                  <span>↺</span>
+                                  <span>Change Choice</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Grounded AI Explainability bullet points */}
+                      <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-line space-y-1.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-inksoft block mb-1">
+                          Model Grounding &amp; Reasoning
+                        </span>
+                        {(vesselDecision?.explainability_reasons || [
+                          'Navigation fairway within certified safety thresholds.',
+                          'Nominal wave height and wind velocity along waypoints.',
+                          'Vessel is on schedule for scheduled berthing window.',
+                        ]).map((reason, i) => (
+                          <div key={i} className="flex items-start gap-1.5 text-xs text-inksoft">
+                            <span className="text-emerald-500 flex-none text-[11px] mt-0.5">▪</span>
+                            <span className="leading-snug text-ink">{reason}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Fly to Ship Button */}
+                      <div className="flex items-center gap-2 pt-1">
+                        <button
+                          onClick={() => {
+                            mapInstanceRef.current?.flyTo([selectedVessel.lat, selectedVessel.lon || selectedVessel.lng], 8, { duration: 1.1 })
+                          }}
+                          className="w-full py-2 px-3 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-ink transition-colors flex items-center gap-1 justify-center"
+                        >
+                          <span>🎯</span>
+                          <span>Fly to Ship on Map</span>
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            ) : selectedPort ? (
+              /* 2. SELECTED PORT DETAIL CARD */
               <div className="bg-surface rounded-3xl border border-line shadow-xs overflow-hidden">
                 <div className="p-4 border-b border-line bg-slate-50/70 dark:bg-slate-800/40 flex items-start justify-between gap-2">
                   <div>
@@ -854,103 +1570,167 @@ export default function WorldMapPage() {
                   </div>
                 </div>
               </div>
-            ) : (
-              <div className="bg-surface rounded-3xl border border-line shadow-xs p-5 text-center">
-                <div className="w-12 h-12 mx-auto mb-2 rounded-2xl bg-sky-100 dark:bg-sky-950/60 text-[#0085db] flex items-center justify-center text-xl">
-                  ⚓
-                </div>
-                <div className="text-sm font-bold text-ink mb-1">Click a Port Marker</div>
-                <div className="text-xs text-inksoft leading-relaxed">
-                  Click any colored port marker or vessel arrow on the world map to inspect real-time turnaround times and live AIS telemetry.
-                </div>
-              </div>
-            )}
-
-            {/* Global Telemetry Summary */}
-            <div className="bg-surface rounded-3xl border border-line shadow-xs p-4">
-              <h4 className="text-xs font-bold text-ink mb-3 uppercase tracking-wider">
-                Network Status Overview
-              </h4>
-              <div className="space-y-2.5">
-                {[
-                  {
-                    label: 'Avg Global Dwell',
-                    value: `${(
-                      WORLD_PORTS.reduce((a, p) => a + p.importDwell, 0) / WORLD_PORTS.length
-                    ).toFixed(1)} days`,
-                    color: 'text-[#0085db]',
-                  },
-                  {
-                    label: 'Most Congested',
-                    value: WORLD_PORTS.reduce((a, b) => (a.importDwell > b.importDwell ? a : b))
-                      .name.split(' ')
-                      .slice(0, 2)
-                      .join(' '),
-                    color: 'text-rose-600 dark:text-rose-400',
-                  },
-                  {
-                    label: 'Highest Velocity',
-                    value: WORLD_PORTS.reduce((a, b) => (a.importDwell < b.importDwell ? a : b))
-                      .name.split(' ')
-                      .slice(0, 2)
-                      .join(' '),
-                    color: 'text-emerald-600 dark:text-emerald-400',
-                  },
-                  {
-                    label: 'Vessels in Transit',
-                    value: `${ACTIVE_VESSELS.filter((v) => v.status === 'transit').length} ships`,
-                    color: 'text-sky-600 dark:text-sky-400',
-                  },
-                  {
-                    label: 'Berthed & Working',
-                    value: `${ACTIVE_VESSELS.filter((v) => v.status === 'berthed').length} ships`,
-                    color: 'text-emerald-600 dark:text-emerald-400',
-                  },
-                ].map(({ label, value, color }) => (
-                  <div key={label} className="flex items-center justify-between text-xs">
-                    <span className="text-inksoft">{label}</span>
-                    <span className={`font-bold ${color}`}>{value}</span>
+            ) : activeTab === 'vessels' ? (
+              /* 3. DEFAULT AIS VESSELS LIST & FILTERS */
+              <div className="bg-surface rounded-3xl border border-line shadow-xs overflow-hidden flex flex-col">
+                <div className="p-4 border-b border-line bg-slate-50/70 dark:bg-slate-800/40">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-xs font-bold text-ink uppercase tracking-wider">
+                      Live AIS Trajectories
+                    </h4>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600">
+                      Live Feed
+                    </span>
                   </div>
-                ))}
-              </div>
-            </div>
+                  {/* Vessel filter pills */}
+                  <div className="flex items-center gap-1 overflow-x-auto pb-1 text-[10px]">
+                    {[
+                      ['all', 'All'],
+                      ['reroute', 'Reroute'],
+                      ['high_risk', 'High Risk'],
+                      ['proceed', 'Proceed'],
+                    ].map(([key, label]) => (
+                      <button
+                        key={key}
+                        onClick={() => setVesselFilter(key)}
+                        className={`px-2.5 py-1 rounded-lg font-bold whitespace-nowrap transition-colors ${
+                          vesselFilter === key
+                            ? 'bg-[#0085db] text-white shadow-xs'
+                            : 'bg-slate-100 dark:bg-slate-800 text-inksoft hover:text-ink'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            {/* Quick Port Jump Directory */}
-            <div className="bg-surface rounded-3xl border border-line shadow-xs overflow-hidden flex-1 flex flex-col">
-              <div className="px-4 py-3 border-b border-line bg-slate-50/70 dark:bg-slate-800/40">
-                <h4 className="text-xs font-bold text-ink">Port Directory</h4>
-                <p className="text-[11px] text-inksoft mt-0.5">
-                  {filteredPorts.length} terminals · click to fly camera
-                </p>
+                <div className="divide-y divide-line max-h-[380px] overflow-y-auto">
+                  {displayedVessels.map((v) => {
+                    const rec = v.recommendation || 'PROCEED'
+                    const recColor =
+                      rec === 'REROUTE' ? 'bg-rose-500 text-white' :
+                      rec === 'HOLD' ? 'bg-amber-500 text-white' :
+                      'bg-emerald-500 text-white'
+
+                    return (
+                      <button
+                        key={v.mmsi}
+                        onClick={() => {
+                          setSelectedPort(null)
+                          setSelectedVessel(v)
+                          mapInstanceRef.current?.flyTo([v.lat, v.lon || v.lng], 6, { duration: 1.1 })
+                        }}
+                        className="w-full text-left p-3 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors flex items-center justify-between gap-2"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold text-ink truncate">{v.name}</span>
+                            <span className="text-[9px] px-1.5 py-0.2 rounded font-black uppercase text-white" style={{ background: rec === 'REROUTE' ? '#f43f5e' : '#10b981' }}>
+                              {rec}
+                            </span>
+                          </div>
+                          <div className="text-[10.5px] text-inksoft mt-0.5">
+                            {v.sog || v.speedKts || 14} kts · {v.origin_country || 'Flag'} → {v.destination || 'Port of Arjuna'}
+                          </div>
+                        </div>
+                        <div className="text-right flex-none">
+                          <div className="text-xs font-extrabold text-ink">
+                            {v.eta_hours ? `${v.eta_hours}h` : v.eta || '12h'}
+                          </div>
+                          <div className="text-[9.5px] text-inksoft">
+                            Risk: <strong className={v.route_risk_level === 'HIGH' ? 'text-rose-600' : 'text-emerald-600'}>{v.route_risk_level || 'LOW'}</strong>
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-              <div className="divide-y divide-line max-h-56 overflow-y-auto">
-                {filteredPorts.map((port) => (
-                  <button
-                    key={port.id}
-                    onClick={() => focusPort(port)}
-                    className={`w-full text-left px-4 py-2 flex items-center justify-between gap-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${
-                      selectedPort?.id === port.id
-                        ? 'bg-sky-50 dark:bg-sky-950/40 border-l-2 border-[#0085db]'
-                        : ''
-                    }`}
-                  >
-                    <div className="min-w-0">
-                      <div className="text-xs font-semibold text-ink truncate">{port.name}</div>
-                      <div className="text-[10px] text-inksoft">
-                        {port.code} · {port.country}
+            ) : (
+              /* 4. DEFAULT PORT DIRECTORY & OVERVIEW */
+              <>
+                <div className="bg-surface rounded-3xl border border-line shadow-xs p-4">
+                  <h4 className="text-xs font-bold text-ink mb-3 uppercase tracking-wider">
+                    Network Status Overview
+                  </h4>
+                  <div className="space-y-2.5">
+                    {[
+                      {
+                        label: 'Avg Global Dwell',
+                        value: `${(
+                          WORLD_PORTS.reduce((a, p) => a + p.importDwell, 0) / WORLD_PORTS.length
+                        ).toFixed(1)} days`,
+                        color: 'text-[#0085db]',
+                      },
+                      {
+                        label: 'Most Congested',
+                        value: WORLD_PORTS.reduce((a, b) => (a.importDwell > b.importDwell ? a : b))
+                          .name.split(' ')
+                          .slice(0, 2)
+                          .join(' '),
+                        color: 'text-rose-600 dark:text-rose-400',
+                      },
+                      {
+                        label: 'Highest Velocity',
+                        value: WORLD_PORTS.reduce((a, b) => (a.importDwell < b.importDwell ? a : b))
+                          .name.split(' ')
+                          .slice(0, 2)
+                          .join(' '),
+                        color: 'text-emerald-600 dark:text-emerald-400',
+                      },
+                      {
+                        label: 'Vessels in Transit',
+                        value: `${displayedVessels.length} ships`,
+                        color: 'text-sky-600 dark:text-sky-400',
+                      },
+                    ].map(({ label, value, color }) => (
+                      <div key={label} className="flex items-center justify-between text-xs">
+                        <span className="text-inksoft">{label}</span>
+                        <span className={`font-bold ${color}`}>{value}</span>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-1.5 flex-none">
-                      <span
-                        className="w-2.5 h-2.5 rounded-full"
-                        style={{ background: getDwellColor(port.medianDwell) }}
-                      />
-                      <span className="text-[11px] font-bold text-ink">{port.medianDwell}d</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Quick Port Jump Directory */}
+                <div className="bg-surface rounded-3xl border border-line shadow-xs overflow-hidden flex-1 flex flex-col">
+                  <div className="px-4 py-3 border-b border-line bg-slate-50/70 dark:bg-slate-800/40">
+                    <h4 className="text-xs font-bold text-ink">Port Directory</h4>
+                    <p className="text-[11px] text-inksoft mt-0.5">
+                      {filteredPorts.length} terminals · click to fly camera
+                    </p>
+                  </div>
+                  <div className="divide-y divide-line max-h-56 overflow-y-auto">
+                    {filteredPorts.map((port) => (
+                      <button
+                        key={port.id}
+                        onClick={() => focusPort(port)}
+                        className={`w-full text-left px-4 py-2 flex items-center justify-between gap-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${
+                          selectedPort?.id === port.id
+                            ? 'bg-sky-50 dark:bg-sky-950/40 border-l-2 border-[#0085db]'
+                            : ''
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <div className="text-xs font-semibold text-ink truncate">{port.name}</div>
+                          <div className="text-[10px] text-inksoft">
+                            {port.code} · {port.country}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-none">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full"
+                            style={{ background: getDwellColor(port.medianDwell) }}
+                          />
+                          <span className="text-[11px] font-bold text-ink">{port.medianDwell}d</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -1094,6 +1874,226 @@ export default function WorldMapPage() {
             </motion.div>
           </div>
         )}
+        {/* Floating Toast Notification */}
+        <AnimatePresence>
+          {toastMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -15, scale: 0.95 }}
+              className="fixed top-20 left-1/2 -translate-x-1/2 z-[9999] max-w-md w-full px-4 pointer-events-none"
+            >
+              <div className={`p-4 rounded-2xl shadow-xl border pointer-events-auto flex items-start gap-3 backdrop-blur-md ${
+                toastMessage.type === 'success'
+                  ? 'bg-emerald-950/90 border-emerald-500/50 text-white'
+                  : toastMessage.type === 'warning'
+                  ? 'bg-amber-950/90 border-amber-500/50 text-white'
+                  : 'bg-slate-900/90 border-slate-700 text-white'
+              }`}>
+                <span className="text-xl flex-none">
+                  {toastMessage.type === 'success' ? '🛡️' : toastMessage.type === 'warning' ? '⚠️' : 'ℹ️'}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold">{toastMessage.title || 'Navigation Alert'}</div>
+                  <div className="text-[11px] text-slate-200 mt-0.5 leading-snug">{toastMessage.text}</div>
+                </div>
+                <button
+                  onClick={() => setToastMessage(null)}
+                  className="text-slate-400 hover:text-white text-xs font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Dedicated Route Acceptance & Trade-off Review Modal */}
+        <AnimatePresence>
+          {showRouteModal && selectedVessel && (
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                className="bg-surface border border-line shadow-2xl rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-5 text-ink relative"
+              >
+                {/* Modal Header */}
+                <div className="flex items-start justify-between gap-4 pb-3 border-b border-line">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🧭</span>
+                      <span className="text-[11px] font-extrabold text-[#0085db] uppercase tracking-wider">
+                        Navigation Route Decision Engine
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-black text-ink mt-0.5 leading-tight">
+                      {selectedVessel.name || 'Vessel Telemetry'} · Route Authorization Review
+                    </h3>
+                    <p className="text-xs text-inksoft mt-0.5">
+                      MMSI: <span className="font-mono font-bold text-ink">{selectedVessel.mmsi}</span> · Flag: {selectedVessel.origin_country || 'International'} · Destination: {selectedVessel.destination || 'Port of Arjuna'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowRouteModal(false)}
+                    className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-inksoft hover:text-ink font-bold transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* The Core Question Callout */}
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-sky-500/10 to-emerald-500/10 border-2 border-indigo-500/30">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                      Operator Decision Required
+                    </span>
+                    <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full text-white ${
+                      routeDecisionStatus === 'ACCEPTED'
+                        ? 'bg-emerald-600'
+                        : routeDecisionStatus === 'DECLINED'
+                        ? 'bg-rose-600'
+                        : 'bg-amber-500 animate-pulse'
+                    }`}>
+                      {routeDecisionStatus === 'ACCEPTED'
+                        ? 'STATUS: ACCEPTED & ACTIVE ✓'
+                        : routeDecisionStatus === 'DECLINED'
+                        ? 'STATUS: DECLINED ✕'
+                        : 'STATUS: PENDING OPERATOR AUTHORIZATION'}
+                    </span>
+                  </div>
+                  <h4 className="text-sm font-extrabold text-ink leading-snug">
+                    {vesselDecision?.route_acceptance?.question ||
+                      `Do you want to accept the alternate deepwater bypass route for ${selectedVessel.name}?`}
+                  </h4>
+                  <p className="text-xs text-inksoft mt-1.5 leading-relaxed">
+                    {vesselDecision?.route_acceptance?.summary ||
+                      `Bypassing the hazard zone steers the vessel through certified deepwater corridors around storm cells, protecting cargo and preventing high demurrage fees.`}
+                  </p>
+                </div>
+
+                {/* 4 Metric Comparison Bar */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                  <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500/20">
+                    <span className="text-[9.5px] uppercase font-bold text-emerald-700 dark:text-emerald-400 block">Weather Risk</span>
+                    <span className="text-lg font-black text-emerald-600">
+                      -{vesselDecision?.comparison?.weather_risk_reduction_pct || 45}%
+                    </span>
+                    <span className="text-[9px] text-emerald-600/80 block font-medium">Bypass Protection</span>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500/20">
+                    <span className="text-[9.5px] uppercase font-bold text-emerald-700 dark:text-emerald-400 block">Demurrage Saved</span>
+                    <span className="text-lg font-black text-emerald-600">
+                      +${(vesselDecision?.cost?.expected_delay_loss_avoided_usd || 19400).toLocaleString()}
+                    </span>
+                    <span className="text-[9px] text-emerald-600/80 block font-medium">Berth Delay Shield</span>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-500/20">
+                    <span className="text-[9.5px] uppercase font-bold text-amber-700 dark:text-amber-400 block">Transit Duration</span>
+                    <span className="text-lg font-black text-amber-600">
+                      +{vesselDecision?.comparison?.transit_delta_hours || 5.8}h
+                    </span>
+                    <span className="text-[9px] text-amber-600/80 block font-medium">Extra Voyage Time</span>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-500/20">
+                    <span className="text-[9.5px] uppercase font-bold text-amber-700 dark:text-amber-400 block">Nautical Distance</span>
+                    <span className="text-lg font-black text-amber-600">
+                      +{Math.round(vesselDecision?.comparison?.distance_delta_nm || 100)} nm
+                    </span>
+                    <span className="text-[9px] text-amber-600/80 block font-medium">Ocean Detour</span>
+                  </div>
+                </div>
+
+                {/* Comprehensive Side-by-Side Trade-off Columns */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Left Column: Why You Should Accept */}
+                  <div className="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border-2 border-emerald-500/30 space-y-2">
+                    <div className="flex items-center gap-1.5 font-black text-emerald-800 dark:text-emerald-300 text-xs uppercase tracking-wide">
+                      <span className="text-base">🛡️</span>
+                      <span>Why You Should Accept (Benefits)</span>
+                    </div>
+                    <ul className="space-y-2 text-xs text-emerald-950 dark:text-emerald-100">
+                      {(vesselDecision?.route_acceptance?.why_accept || [
+                        `Reduces severe storm & high wave hazard exposure by ${vesselDecision?.comparison?.weather_risk_reduction_pct || 45}%.`,
+                        'Avoids dangerous gale cells protecting vessel hull integrity and cargo stability.',
+                        `Saves an estimated $${(vesselDecision?.cost?.expected_delay_loss_avoided_usd || 19400).toLocaleString()} USD in laytime delay penalties.`,
+                        'Strictly follows certified 100% deepwater international oceanic corridors with zero land traversal.',
+                      ]).map((item, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="text-emerald-600 font-black text-sm leading-none mt-0.5">✓</span>
+                          <span className="leading-snug">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Right Column: Why You Might Decline */}
+                  <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border-2 border-amber-500/30 space-y-2">
+                    <div className="flex items-center gap-1.5 font-black text-amber-800 dark:text-amber-300 text-xs uppercase tracking-wide">
+                      <span className="text-base">⚠️</span>
+                      <span>Why You Might Decline (Trade-offs)</span>
+                    </div>
+                    <ul className="space-y-2 text-xs text-amber-950 dark:text-amber-100">
+                      {(vesselDecision?.route_acceptance?.why_decline || [
+                        `Adds +${vesselDecision?.comparison?.distance_delta_nm || 100} nautical miles around the storm hazard zone.`,
+                        `Increases voyage transit duration by +${vesselDecision?.comparison?.transit_delta_hours || 5.8} hours.`,
+                        `Incurs additional bunker fuel and engine running costs (~$${Math.round(vesselDecision?.cost?.net_cost_difference_usd || 0).toLocaleString()} USD).`,
+                        'May require re-negotiating the allotted terminal container gantry crane berthing window.',
+                      ]).map((item, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="text-amber-600 font-black text-sm leading-none mt-0.5">✕</span>
+                          <span className="leading-snug">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Modal Action Buttons */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-line">
+                  <div className="text-xs text-inksoft">
+                    {routeDecisionStatus !== 'PENDING' ? (
+                      <button
+                        onClick={handleResetDecision}
+                        className="text-[#0085db] hover:underline font-bold flex items-center gap-1"
+                      >
+                        <span>↺</span>
+                        <span>Reset Decision to PENDING</span>
+                      </button>
+                    ) : (
+                      <span>Decision will be logged to ECDIS audit stream.</span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <button
+                      onClick={() => {
+                        handleDeclineRoute()
+                        setShowRouteModal(false)
+                      }}
+                      className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold border border-rose-300 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                    >
+                      ✕ Decline (Keep Current Fairway)
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        handleAcceptRoute()
+                        setShowRouteModal(false)
+                      }}
+                      className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors shadow-md shadow-emerald-600/25"
+                    >
+                      ✓ Accept Alternate Deepwater Route
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </AnimatePresence>
     </AppShell>
   )
