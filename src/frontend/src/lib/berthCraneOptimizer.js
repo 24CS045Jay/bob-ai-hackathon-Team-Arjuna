@@ -14,7 +14,8 @@ export function runBerthCraneAllocationOptimizer({
   vessels = [],
   berths = [],
   cranes = [],
-  weatherTide = null
+  weatherTide = null,
+  commercialStrategy = 'revenue_max' // 'revenue_max' (hold USD ship) or 'cost_min' (clear USD ship first)
 }) {
   const tideHeight = weatherTide?.currentTide?.heightMeters ?? 2.4
   const windGustKts = weatherTide?.wind?.gustKts ?? 26
@@ -29,9 +30,26 @@ export function runBerthCraneAllocationOptimizer({
   )
 
   // Find vessels currently queued or pending allocation
-  const queuedVessels = vessels.filter(
+  let queuedVessels = vessels.filter(
     (v) => v.stage === 0 || v.stage === 1 || v.status === 'queued' || !v.berth || v.berth.includes('Anchorage')
   )
+
+  // Sort queued vessels based on Commercial Currency Priority Strategy
+  queuedVessels = [...queuedVessels].sort((a, b) => {
+    const rateA = a.hourlyWaitingRateUSD || 1000
+    const rateB = b.hourlyWaitingRateUSD || 1000
+
+    if (commercialStrategy === 'revenue_max') {
+      // REVENUE MAXIMIZATION (Hold USD Vessel):
+      // The American ship pays in USD (higher rate), so the terminal holds the US ship in anchorage
+      // to earn high-margin dollar waiting dues, and berths the lower-paying vessel (e.g. Vietnam) first.
+      return rateA - rateB // lower rate berthed first, high USD rate waits
+    } else {
+      // COST MINIMIZATION (SLA penalty avoidance):
+      // Minimize demurrage exposure: berth expensive USD vessel first to avoid heavy demurrage claims.
+      return rateB - rateA // higher rate berthed first
+    }
+  })
 
   // Candidate empty/available berths
   const openBerths = proposedBerths.filter(
@@ -41,6 +59,7 @@ export function runBerthCraneAllocationOptimizer({
   const allocations = []
   let totalDelayHoursSaved = 0
   let totalDemurrageSaved = 0
+  let totalWaitingRevenueCollected = 0
 
   // Optimize unassigned vessels into candidate berths
   queuedVessels.forEach((vessel) => {
@@ -59,7 +78,8 @@ export function runBerthCraneAllocationOptimizer({
 
       const assignedMoves = suitableCrane ? suitableCrane.movesPerHour : 30
       const delaySaved = 4.5
-      const costSaved = Math.round((delaySaved / 24) * 38500)
+      const vesselRate = vessel.hourlyWaitingRateUSD || 1500
+      const costSaved = Math.round((delaySaved / 24) * (vesselRate * 24))
 
       totalDelayHoursSaved += delaySaved
       totalDemurrageSaved += costSaved
@@ -80,13 +100,20 @@ export function runBerthCraneAllocationOptimizer({
         berthName: suitableBerth.name,
         vesselId: vessel.id,
         vesselName: vessel.name,
+        originCountry: vessel.originCountry || 'International',
+        flag: vessel.flag || '🌐',
+        billingCurrency: vessel.billingCurrency || 'USD',
+        hourlyWaitingRateUSD: vessel.hourlyWaitingRateUSD || 1500,
+        localCurrencyRatePerHour: vessel.localCurrencyRatePerHour || `$${(vessel.hourlyWaitingRateUSD || 1500).toLocaleString()} / hr`,
         craneId: suitableCrane ? suitableCrane.id : 'C-06',
         craneName: suitableCrane ? suitableCrane.name : 'STS Crane 06 (Standby Pool)',
         movesPerHour: assignedMoves,
         draftClearanceMargin: `+${(suitableBerth.depthM + tideHeight - vessel.draft).toFixed(1)}m`,
         delayReductionHours: delaySaved,
         demurrageSaved: costSaved,
-        rationale: `Matched ${vessel.name} (Draft: ${vessel.draft}m) to ${suitableBerth.name} (${suitableBerth.depthM}m depth). Paired with ${suitableCrane?.id || 'C-06'} at ${assignedMoves} GMPH.`
+        rationale: commercialStrategy === 'revenue_max'
+          ? `Commercial Priority: Berthed ${vessel.name} (${vessel.flag} ${vessel.billingCurrency} @ ${vessel.localCurrencyRatePerHour || '$' + (vessel.hourlyWaitingRateUSD || 1500) + '/hr'}). Higher-tariff USD ships held at anchorage to maximize dollar-denominated waiting tariffs.`
+          : `SLA Minimization: Prioritized ${vessel.name} (${vessel.flag} ${vessel.billingCurrency}) with highest waiting rate ($${vessel.hourlyWaitingRateUSD || 1500}/hr) to avoid extreme demurrage claims.`
       })
     }
   })
@@ -129,13 +156,25 @@ export function runBerthCraneAllocationOptimizer({
   return {
     timestamp: new Date().toISOString(),
     solverStatus: 'optimal',
-    solverType: 'Constraint-Satisfaction Heuristic (Greedy GMPH Maximizer)',
+    solverType: 'Constraint-Satisfaction Heuristic (Currency & GMPH Maximizer)',
+    commercialStrategy,
     metrics: {
       vesselsAllocated: allocations.length,
       totalDelayHoursSaved: Number(totalDelayHoursSaved.toFixed(1)),
       totalDemurrageSaved,
       averageMoveRate: 33.6
     },
+    queuedVesselsEvaluated: queuedVessels.map((v) => ({
+      id: v.id,
+      name: v.name,
+      originCountry: v.originCountry || 'International',
+      flag: v.flag || '🌐',
+      billingCurrency: v.billingCurrency || 'USD',
+      currencySymbol: v.currencySymbol || '$',
+      hourlyWaitingRateUSD: v.hourlyWaitingRateUSD || 1500,
+      localCurrencyRatePerHour: v.localCurrencyRatePerHour || `$${(v.hourlyWaitingRateUSD || 1500).toLocaleString()} / hr`,
+      priorityRank: commercialStrategy === 'revenue_max' ? 'Hold at Anchorage' : 'Priority Berth Dispatch'
+    })),
     allocations,
     proposedBerths
   }
