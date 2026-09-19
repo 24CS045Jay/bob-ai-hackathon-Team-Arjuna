@@ -701,29 +701,27 @@ export default function WorldMapPage() {
     const isAccepted = routeDecisionStatus === 'ACCEPTED' || appliedReroute
     const isDeclined = routeDecisionStatus === 'DECLINED'
 
-    // 1. Render Current Route Polyline & Waypoints
-    if (currentWaypoints.length > 1) {
+    // 1. Render Current Route Polyline & Waypoints (HIDDEN completely once alternate route is accepted)
+    if (!isAccepted && currentWaypoints.length > 1) {
       const currentCoords = currentWaypoints.map((wp) => [Number(wp.lat), Number(wp.lon)])
       
       const currentGlow = L.polyline(currentCoords, {
-        color: isAccepted ? '#94a3b8' : (isReroute ? '#f43f5e' : '#3b82f6'),
-        weight: isAccepted ? 3 : 6,
-        opacity: isAccepted ? 0.12 : 0.25,
+        color: isReroute ? '#f43f5e' : '#3b82f6',
+        weight: 6,
+        opacity: 0.25,
         lineCap: 'round',
       })
       
       const currentLine = L.polyline(currentCoords, {
-        color: isAccepted ? '#94a3b8' : (isReroute ? '#ef4444' : '#2563eb'),
-        weight: isAccepted ? 2 : 3,
-        dashArray: isAccepted ? '4, 8' : (isReroute ? '8, 8' : '5, 7'),
+        color: isReroute ? '#ef4444' : '#2563eb',
+        weight: 3,
+        dashArray: isReroute ? '8, 8' : '5, 7',
         lineCap: 'round',
       })
 
       currentLine.bindTooltip(
-        `<div class="text-xs font-bold ${isAccepted ? 'text-slate-500' : (isReroute ? 'text-rose-600' : 'text-blue-600')}">
-          ${isAccepted
-            ? 'Original Fairway (Superseded by Accepted Alternate Bypass)'
-            : isDeclined
+        `<div class="text-xs font-bold ${isDeclined ? 'text-slate-500' : (isReroute ? 'text-rose-600' : 'text-blue-600')}">
+          ${isDeclined
             ? '⚠️ Active Fairway (Alternate Route Declined by Operator)'
             : isReroute
             ? '⚠️ Current Fairway (High Weather Risk & Laytime Penalty)'
@@ -737,11 +735,11 @@ export default function WorldMapPage() {
 
       currentWaypoints.forEach((wp, idx) => {
         const pin = L.circleMarker([Number(wp.lat), Number(wp.lon)], {
-          radius: isAccepted ? 3 : 4,
-          fillColor: isAccepted ? '#94a3b8' : (isReroute ? '#f43f5e' : '#3b82f6'),
+          radius: 4,
+          fillColor: isReroute ? '#f43f5e' : '#3b82f6',
           color: '#ffffff',
           weight: 1.5,
-          fillOpacity: isAccepted ? 0.5 : 0.9,
+          fillOpacity: 0.9,
         })
         pin.bindTooltip(`<span class="text-xs font-mono font-bold">${wp.name || `WP-0${idx + 1}`}</span>`, { sticky: true })
         group.addLayer(pin)
@@ -1007,7 +1005,7 @@ export default function WorldMapPage() {
           {/* MAP CANVAS CONTAINER */}
           <div
             className="lg:col-span-9 bg-slate-900 rounded-3xl border border-line shadow-xs overflow-hidden relative select-none flex flex-col"
-            style={{ height: isFullscreen ? '100vh' : '640px' }}
+            style={{ height: isFullscreen ? '100vh' : 'calc(100vh - 130px)', minHeight: '620px' }}
           >
             {/* The Pure Leaflet GIS Canvas */}
             <div
@@ -1104,9 +1102,9 @@ export default function WorldMapPage() {
           </div>
 
           {/* ── RIGHT TELEMETRY & MARITIME AI DECISION PANEL ─────────────── */}
-          <div className="lg:col-span-3 flex flex-col gap-3 overflow-y-auto max-h-[640px]">
+          <div className="lg:col-span-3 flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-130px)] min-h-[620px] pb-32 pr-1 scrollbar-thin">
             {/* Top Tab Switcher */}
-            <div className="flex items-center gap-1 p-1 bg-surface rounded-2xl border border-line shadow-2xs">
+            <div className="flex items-center gap-1 p-1 bg-surface rounded-2xl border border-line shadow-2xs flex-none">
               <button
                 onClick={() => setActiveTab('vessels')}
                 className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
@@ -1133,9 +1131,9 @@ export default function WorldMapPage() {
 
             {/* 1. SELECTED VESSEL: MARITIME AI DECISION SUPPORT DRAWER */}
             {selectedVessel ? (
-              <div className="bg-surface rounded-3xl border border-line shadow-xs overflow-hidden">
+              <div className="bg-surface rounded-3xl border border-line shadow-xs overflow-y-auto max-h-[calc(100vh-200px)] min-h-[500px] scrollbar-thin">
                 {/* Header */}
-                <div className="p-4 border-b border-line bg-slate-50/70 dark:bg-slate-800/40 flex items-start justify-between gap-2">
+                <div className="p-4 border-b border-line bg-slate-50/70 dark:bg-slate-800/40 flex items-start justify-between gap-2 sticky top-0 z-10 backdrop-blur-md">
                   <div>
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs font-bold text-sky-600 dark:text-sky-400">MMSI {selectedVessel.mmsi}</span>
@@ -1164,7 +1162,7 @@ export default function WorldMapPage() {
                 </div>
 
                 {/* AI Decision Content */}
-                <div className="p-4 space-y-3">
+                <div className="p-4 space-y-3 pb-32">
                   {loadingDecision ? (
                     <div className="p-6 text-center text-xs text-inksoft flex flex-col items-center justify-center gap-2">
                       <span className="animate-spin text-lg text-sky-500">⟳</span>
