@@ -8,9 +8,14 @@ Endpoints:
 import os
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from ..db.database import get_db
-from ..models.schemas import CopilotChatRequest, CopilotChatResponse
-from ..services.copilot_service import process_copilot_query, DEMO_MODE, WATSONX_APIKEY, WATSONX_PROJECT_ID
+try:
+    from ..db.database import get_db
+    from ..models.schemas import CopilotChatRequest, CopilotChatResponse
+    from ..services.copilot_service import process_copilot_query, DEMO_MODE, WATSONX_APIKEY, WATSONX_PROJECT_ID
+except (ImportError, ValueError):
+    from db.database import get_db
+    from models.schemas import CopilotChatRequest, CopilotChatResponse
+    from services.copilot_service import process_copilot_query, DEMO_MODE, WATSONX_APIKEY, WATSONX_PROJECT_ID
 
 router = APIRouter(prefix="/api/copilot", tags=["Copilot"])
 

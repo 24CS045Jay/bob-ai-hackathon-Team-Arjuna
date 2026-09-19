@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useMemo } from 'react'
+import { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react'
 import { VESSELS as SEED_VESSELS } from '../data/vessels.mock.js'
 import { BERTHS as SEED_BERTHS, AVAILABLE_CRANES as SEED_CRANES } from '../data/berths.mock.js'
 import { GATES as SEED_GATES } from '../data/gates.mock.js'
@@ -8,6 +8,15 @@ import { computeRoutingRecommendations } from '../lib/routingEngine.js'
 import { runBerthCraneAllocationOptimizer } from '../lib/berthCraneOptimizer.js'
 import { generateSeventyTwoHourPlan } from '../lib/planGenerator.js'
 import { useRole } from './RoleContext.jsx'
+import {
+  fetchHealth,
+  fetchCopilotStatus,
+  fetchHotspots,
+  optimizeBerths,
+  optimizeCranes,
+  optimizeRoute,
+  fetch72hPlan,
+} from '../api/client.js'
 
 const OperationalContext = createContext(null)
 
@@ -23,6 +32,54 @@ export function OperationalProvider({ children }) {
   const [appliedDiversions, setAppliedDiversions] = useState([])
   const [approvedPlanStamp, setApprovedPlanStamp] = useState(null)
   const [activeDisruption, setActiveDisruption] = useState(null)
+
+  // Live backend connection state & telemetry
+  const [backendStatus, setBackendStatus] = useState({
+    connected: false,
+    latencyMs: 0,
+    timestamp: null,
+    activeLlm: null,
+    checking: false,
+  })
+
+  const checkBackendHealth = useCallback(async () => {
+    setBackendStatus((prev) => ({ ...prev, checking: true }))
+    try {
+      const health = await fetchHealth()
+      if (health && health.online) {
+        const copilot = await fetchCopilotStatus()
+        setBackendStatus({
+          connected: true,
+          latencyMs: health.latencyMs || 10,
+          timestamp: health.timestamp_utc || new Date().toISOString(),
+          activeLlm: copilot?.active_llm || 'PortFlow AI (FastAPI :8000)',
+          checking: false,
+        })
+      } else {
+        setBackendStatus({
+          connected: false,
+          latencyMs: 0,
+          timestamp: null,
+          activeLlm: null,
+          checking: false,
+        })
+      }
+    } catch {
+      setBackendStatus({
+        connected: false,
+        latencyMs: 0,
+        timestamp: null,
+        activeLlm: null,
+        checking: false,
+      })
+    }
+  }, [])
+
+  useEffect(() => {
+    checkBackendHealth()
+    const timer = setInterval(checkBackendHealth, 15000)
+    return () => clearInterval(timer)
+  }, [checkBackendHealth])
 
   // -------------------------------------------------------------
   // Pure Computational Engine Pipelines (Live Reactive Loop)
@@ -396,6 +453,56 @@ export function OperationalProvider({ children }) {
     })
   }
 
+  /**
+   * Triggers discrete berth and crane optimization on the FastAPI backend.
+   */
+  const runBackendBerthOptimization = async () => {
+    try {
+      const res = await optimizeBerths()
+      if (res && res.assignments) {
+        logAction({
+          action: 'BACKEND_BERTH_OPTIMIZER_CALLED',
+          target: 'FastAPI /api/optimisation/berths',
+          details: `Computed ${res.assignments.length} assignments via backend constraint solver. Mean wait: ${res.metrics?.mean_wait_hours || 0}h.`
+        })
+        addNotification({
+          title: `Backend Optimizer: ${res.assignments.length} vessel allocations calculated`,
+          type: 'berth',
+          path: '/berths'
+        })
+        return res
+      }
+    } catch (err) {
+      console.warn('Backend berth optimizer error:', err)
+    }
+    return null
+  }
+
+  /**
+   * Triggers Dijkstra channel route optimization on the FastAPI backend.
+   */
+  const runBackendRouteOptimization = async ({ startWaypoint, endWaypoint, draftM, tideHeightM }) => {
+    try {
+      const res = await optimizeRoute({
+        startWaypoint,
+        endWaypoint,
+        draftM,
+        tideHeightM,
+      })
+      if (res && res.path) {
+        logAction({
+          action: 'BACKEND_ROUTE_OPTIMIZER_CALLED',
+          target: 'FastAPI /api/optimisation/routes',
+          details: `Optimized navigation path ${res.path.join(' → ')} (${res.total_distance_nm} nm, UKC ${res.minimum_under_keel_clearance_m}m).`
+        })
+        return res
+      }
+    } catch (err) {
+      console.warn('Backend route optimizer error:', err)
+    }
+    return null
+  }
+
   return (
     <OperationalContext.Provider
       value={{
@@ -415,6 +522,12 @@ export function OperationalProvider({ children }) {
         routingRecommendations,
         optimizerProposal,
         activePlan,
+
+        // Live Backend API state & controls
+        backendStatus,
+        checkBackendHealth,
+        runBackendBerthOptimization,
+        runBackendRouteOptimization,
 
         // Mutators
         adjustVesselSchedule,
