@@ -113,3 +113,103 @@ ANCHORAGE ──> Zone A <──> Zone B <──> Zone C
   { "vessel_id": "V015", "vessel_name": "MV Draupadi Logistics", "type": "container", "size_class": "medium", "eta_hours_from_now": 18.0, "cargo_tons": 33000, "expected_handling_hours": 6.5, "current_position": "scheduled" }
 ]
 ```
+
+---
+
+## 5. Maritime AI AIS Telemetry, Marine Weather & Route Decision Contract
+
+### 5.1 AIS Vessel Telemetry Payload (`GET /api/vessels/{mmsi}/telemetry`)
+
+```json
+{
+  "mmsi": 987654321,
+  "vessel_name": "MV Ocean Voyager",
+  "vessel_type": "Ultra Large Container Vessel (ULCV)",
+  "latitude": 18.4201,
+  "longitude": 70.8124,
+  "heading_deg": 142.5,
+  "sog_knots": 17.8,
+  "cog_deg": 143.0,
+  "draught_m": 15.2,
+  "under_keel_clearance_m": 3.8,
+  "navigational_status": "Underway Using Engine",
+  "destination_port": "Port of Arjuna",
+  "eta_utc": "2026-09-20T18:30:00Z",
+  "seaward_clamped": true
+}
+```
+
+### 5.2 Marine Weather Observation Contract (`weather_service.py` & Open-Meteo)
+
+```json
+{
+  "latitude": 18.42,
+  "longitude": 70.81,
+  "timestamp_utc": "2026-09-19T08:00:00Z",
+  "wave_height_m": 4.8,
+  "swell_period_sec": 11.2,
+  "wind_speed_knots": 38.4,
+  "wind_gust_knots": 51.0,
+  "ocean_current_knots": 2.1,
+  "ocean_current_direction_deg": 220.0,
+  "sea_state": "Rough / Gale",
+  "cyclone_proximity_nm": 42.0
+}
+```
+
+### 5.3 Route Recommendation & Acceptance Contract (`GET /api/vessels/{mmsi}/recommendation`)
+
+```json
+{
+  "mmsi": 987654321,
+  "current_route": {
+    "risk_level": "SEVERE",
+    "risk_score_pct": 86.4,
+    "eta_utc": "2026-09-20T18:30:00Z",
+    "distance_nm": 420.0,
+    "storm_intersection": true,
+    "waypoints": [[18.42, 70.81], [18.95, 72.82]]
+  },
+  "recommended_route": {
+    "risk_level": "LOW",
+    "risk_score_pct": 14.2,
+    "eta_utc": "2026-09-20T21:45:00Z",
+    "distance_nm": 458.5,
+    "corridor_type": "100% Oceanic Certified Deepwater Fairway",
+    "land_traversal": false,
+    "waypoints": [[18.42, 70.81], [17.85, 70.20], [17.10, 71.50], [18.95, 72.82]]
+  },
+  "route_acceptance": {
+    "question": "Do you want to authorize and activate the Oceanic Bypass Route for MV Ocean Voyager?",
+    "summary": "Diverts vessel 38.5 NM westward around Tropical Depression Storm Zone into deep sea water.",
+    "why_accept": [
+      "Bypasses 4.8m wave fronts, reducing hull torsion and parametric rolling risk by 82%.",
+      "Eliminates grounding risk across coastal shoals and guarantees >3.5m under-keel clearance.",
+      "Averts estimated charter demurrage of $42,000 caused by storm delays at outer anchorage."
+    ],
+    "why_decline": [
+      "Extends transit distance by +38.5 nautical miles, increasing voyage duration by +3.25 hours.",
+      "Consumes approximately 4.2 additional tons of VLSFO bunker fuel (~$2,730 USD)."
+    ],
+    "metrics_tradeoff": {
+      "risk_reduction_pct": 72.2,
+      "eta_delay_hours": 3.25,
+      "bunker_cost_delta_usd": 2730.0,
+      "net_demurrage_avoided_usd": 42000.0,
+      "roi_ratio": 15.38
+    }
+  }
+}
+```
+
+### 5.4 Operator Route Decision Contract (`POST /api/vessels/{mmsi}/route-decision`)
+
+```json
+{
+  "mmsi": 987654321,
+  "decision": "ACCEPTED",
+  "reason": "Operator confirmed oceanic storm evasion to safeguard cargo and eliminate anchorage demurrage",
+  "operator_id": "DISPATCHER_CHIEF_01",
+  "timestamp": "2026-09-19T08:35:10Z"
+}
+```

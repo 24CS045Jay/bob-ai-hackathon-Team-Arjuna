@@ -19,7 +19,9 @@ Container terminal operations rely on a tightly coupled sequence of mission-crit
 Under current terminal operations, these resources are managed **reactively and in disconnected operational silos**:
 - **Spreadsheet-Based Dispatching:** Berth allocation and crane gang assignments are frequently scheduled using static spreadsheets, manual whiteboard calculations, and VHF radio confirmations.
 - **Inability to Predict Congestion Ahead of Time:** Operations dispatchers only discover yard gridlock and crane saturation *after* vessel dwell times surge and truck turnarounds exceed 90 minutes.
-- **Stochastic Maritime Delays:** Transoceanic container ships encounter weather diversions, machinery deratings, and canal congestion, arriving off-schedule. Legacy terminal operating systems (TOS) cannot dynamically re-optimize schedules in real time.
+- **Stochastic Maritime Delays & Blind Weather Encounters:** Transoceanic container ships encounter sudden 30-knot gale winds and 3.5m waves, arriving off-schedule without dynamic open-water bypass fairways.
+- **Multi-Currency Demurrage Inequity:** Ports apply naive first-come-first-served scheduling, ignoring currency disparities where high-value US Dollar vessels ($3,450/hr) incur severe demurrage penalties while waiting behind local-currency regional feeders ($400/hr).
+- **Black-Box AI Distrust:** Harbor masters and captains reject autonomous black-box systems that alter routes without transparent operational explainability (Why Accept vs Why Decline).
 - **Tidal Lockouts & Fuel Waste:** Deep-draft vessels arriving during low tidal windows are forced to wait offshore in anchorages. An idle container ship burns **25 to 35 metric tons of heavy bunker fuel daily** solely to power auxiliary engines and reefer cooling units.
 
 ---
@@ -28,7 +30,9 @@ Under current terminal operations, these resources are managed **reactively and 
 
 | Dimension | Real-World Impact | Financial / Environmental Metric |
 |---|---|---|
-| **Demurrage Penalties** | Ocean carriers incur heavy contractual penalties when vessels wait beyond negotiated laytime windows. | **$30,000 to $80,000 per vessel-day** in demurrage fees. |
+| **Demurrage Penalties** | Ocean carriers incur heavy contractual penalties when vessels wait beyond negotiated laytime windows. | **$30,000 to $80,000 per vessel-day** ($2,500–$3,500/hr) in demurrage fees. |
+| **Severe Weather Cargo Loss** | Vessels entering storm cells experience parametric rolling, container stack collapse, and structural damage. | **Over 1,500 containers lost at sea annually** costing hundreds of millions. |
+| **Currency Disparity Losses** | Poor queue sequencing forces expensive foreign-currency liners to wait while servicing low-demurrage local feeders. | **$15,000 to $45,000 avoidable losses** per congested tidal cycle. |
 | **Global Supply Chain Disruption** | Cascading delays tie up container chassis and inventories, causing downstream manufacturing stockouts. | **>$10 Billion annually** in global supply chain losses. |
 | **Carbon & Coastal Emissions** | Auxiliary engines burning bunker fuel in offshore anchorages release CO2, sulfur oxides (SOx), nitrogen oxides (NOx), and particulate matter (PM2.5). | **Over 150,000 tons of avoidable CO2** emitted per port backlog annually. |
 | **Landside Drayage Delays** | Truck queues at terminal gate complexes lead to driver hour-of-service violations and port highway congestion. | **$120+ per truck idling hour**, with queues stretching miles outside terminal gates. |

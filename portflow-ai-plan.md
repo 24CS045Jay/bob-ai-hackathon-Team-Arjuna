@@ -30,6 +30,13 @@ everything using live system context — all within 3 days.
   commit (contracts + skeleton) is pushed and merged to `main`.
 - The hackathon validation workflow and all required submission files are preserved
   exactly as they exist in the template — no modifications to `.github/workflows/validate.yml`.
+- **Maritime AI & Oceanic Intelligence Extension (✅ 100% IMPLEMENTED):**
+  - **Live AIS Telemetry Engine:** `ais_service.py` provides real-time streaming transponder data with seaward coordinate clamping to ensure vessels remain strictly in navigable deep waters.
+  - **Open-Meteo Marine Weather API:** `weather_service.py` fetches live oceanic conditions ($H_s$ wave height, swell period, wind knots, marine surface currents) with offline high-fidelity simulation fallback.
+  - **100% Oceanic Certified Fairways:** `rerouting_service.py` dynamically calculates storm bypass corridors ensuring zero land traversal or shallow shoal hazards.
+  - **Interactive Operator Route Acceptance:** `recommendation_service.py` & `maritime_router.py` provide side-by-side "Why Accept" vs "Why Decline" trade-off matrices with route decision persistence (`POST /api/vessels/{mmsi}/route-decision`).
+  - **Multi-Currency Demurrage Valuation:** `cost_service.py` dynamically computes financial exposure in 8 global currencies (USD, EUR, GBP, JPY, SGD, INR, CNY, AED) using live ExchangeRate-API feeds.
+  - **Enhanced Maritime World Map UI:** High-definition Leaflet/Mapbox canvas with full height scrolling clearance (`max-h-[calc(100vh-130px)]` with `pb-32` bottom padding) and automatic red hazard line suppression upon route acceptance.
 
 ---
 

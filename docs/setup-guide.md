@@ -163,6 +163,10 @@ curl http://localhost:8000/health
 # 4. Test Supabase Cloud Status
 curl http://localhost:8000/api/supabase/status
 
-# 5. Verify Frontend Production Build
+# 5. Test Live Maritime Telemetry & Recommendations
+curl http://localhost:8000/api/vessels
+curl http://localhost:8000/api/vessels/987654321/recommendation
+
+# 6. Verify Frontend Production Build
 cd src/frontend && npm run build
 ```

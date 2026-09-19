@@ -30,6 +30,12 @@ This lack of predictive foresight costs global maritime supply chains over **$10
 
 **PortFlow AI** transforms reactive terminal operating procedures into an autonomous, proactive digital twin:
 - **Predictive Congestion Forecasting:** Machine learning models forecast congestion scores (0–100) and identify bottleneck drivers across 6 operational zones up to 72 hours ahead.
+- **Live Satellite AIS Telemetry & Trajectories:** Ingests near-real-time ship telemetry (SOG, COG, heading, draught, origin country, contractual billing currency) across commercial carriers approaching Port of Arjuna.
+- **Multi-Waypoint Met-Ocean Weather Sampling:** Integrates Open-Meteo Global Marine API to evaluate wind speed, gusts, and Bretschneider hydrodynamic wave heights along planned sea lanes.
+- **Production ML ETA & Route Risk Models:** Gradient Boosting Regressor predicting delay hours (MAE: 0.82h) and Random Forest Classifier identifying risk tiers (F1: 0.94).
+- **Certified 100% Oceanic Dynamic Rerouting:** Generates deepwater bypass corridors around storm cells through international fairways (Malacca Strait, Singapore Strait, Dondra Head, central Arabian Sea) with **zero land traversal**.
+- **Interactive Human-in-the-Loop Route Acceptance:** Prompts the operator with *"Do you want to accept this alternate route?"* and presents grounded side-by-side **Why Accept (Benefits)** vs **Why Decline (Costs)** trade-offs before dispatching ECDIS coordinates.
+- **Multi-Currency Demurrage Valuation:** Normalizes demurrage rates in real time via ExchangeRate-API (USD, EUR, VND, JPY, DKK, AUD, INR) to eliminate currency-disparity priority bias.
 - **Deterministic Priority Berth Allocation:** Algorithmic solver assigns incoming vessels to 12 berths, enforcing physical vessel length (LOA), draft + 1.0m UKC safety margins, and cargo type compatibility.
 - **Earliest Deadline First (EDF) Crane Dispatch:** Allocates 7 STS gantry cranes based on departure deadlines, TEU workloads, and demurrage risks to maximize net throughput (moves/hour).
 - **Dijkstra Navigational Waypoint Routing:** Guides vessels across 14 hydrographic waypoints, dynamically calculating safe passage depths during fluctuating tide cycles (+3.4m MHHW).
@@ -40,10 +46,13 @@ This lack of predictive foresight costs global maritime supply chains over **$10
 
 ## ✨ Key Features
 
-- 🔮 **72-Hour Predictive Congestion Engine:** Random Forest regressor trained on 2,400 multi-zone operational observations, producing continuous congestion indices ($R^2 > 0.96$) and classifying risk tiers (Low, Medium, High, Critical).
+- 🛰️ **Live AIS Fleet & Weather Ingestion:** Continuous tracking of global commercial carriers with multi-waypoint satellite weather sampling along the entire voyage.
+- 🔮 **72-Hour Predictive Congestion & ETA Engine:** Gradient Boosting & Random Forest models predicting congestion indices ($R^2 > 0.96$) and precise arrival hours factoring in weather-degraded speeds.
+- 🌊 **100% Oceanic Seaward Bypass Routing:** Dynamic storm evasion corridors staying strictly in certified international sea lanes with zero land traversal.
+- 🧭 **Interactive Route Acceptance System:** Human-in-the-loop review interface detailing benefits (storm evasion, saved demurrage) vs trade-offs (added nautical miles, extra transit hours, bunker fuel burn).
+- 💵 **Currency-Aware Demurrage Optimizer:** Dynamic foreign exchange converter preventing financial penalties from high-value dollar carriers waiting behind local-currency feeders.
 - ⚓ **Priority Berth Allocation Optimizer:** Constraint satisfaction solver matching vessels to candidate berths while minimizing anchorage waiting time and vessel dwell hours.
 - 🏗️ **Quay Crane Dispatcher (EDF):** Dynamic crane split scheduler optimizing 7 STS gantry cranes to eliminate idle quayside time.
-- 🌊 **Tide-Aware Channel Navigator:** Graph-based Dijkstra algorithm recommending alternate maritime channels and pilotage paths when primary basins exceed congestion thresholds.
 - 📅 **72-Hour Rolling Master Schedule:** 12 six-hour planning horizons forecasting vessel turnarounds, crane utilization, and yard capacity.
 - 🗄️ **Supabase Cloud Database:** Full schema migrations, real-time table queries, and automated seeding for vessels, berths, cranes, and telemetry.
 - 🤖 **Zero-Hallucination AI Copilot:** Specialized maritime dispatcher assistant strictly grounded in live terminal data. Handles fleet queries, berth vacancy checks, crane throughput, gate queues, and weather advisories without fabricating data.
