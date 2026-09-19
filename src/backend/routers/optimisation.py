@@ -10,21 +10,38 @@ Endpoints:
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from ..db.database import get_db
-from ..db.models import BerthModel, CraneModel, VesselModel
-from ..models.schemas import (
-    BerthOptimizationRequest,
-    BerthOptimizationResponse,
-    CraneOptimizationRequest,
-    CraneOptimizationResponse,
-    RouteOptimizationRequest,
-    RouteOptimizationResponse,
-)
-from ..services.optimiser_client import (
-    run_berth_optimization,
-    run_crane_optimization,
-    run_route_optimization,
-)
+try:
+    from ..db.database import get_db
+    from ..db.models import BerthModel, CraneModel, VesselModel
+    from ..models.schemas import (
+        BerthOptimizationRequest,
+        BerthOptimizationResponse,
+        CraneOptimizationRequest,
+        CraneOptimizationResponse,
+        RouteOptimizationRequest,
+        RouteOptimizationResponse,
+    )
+    from ..services.optimiser_client import (
+        run_berth_optimization,
+        run_crane_optimization,
+        run_route_optimization,
+    )
+except (ImportError, ValueError):
+    from db.database import get_db
+    from db.models import BerthModel, CraneModel, VesselModel
+    from models.schemas import (
+        BerthOptimizationRequest,
+        BerthOptimizationResponse,
+        CraneOptimizationRequest,
+        CraneOptimizationResponse,
+        RouteOptimizationRequest,
+        RouteOptimizationResponse,
+    )
+    from services.optimiser_client import (
+        run_berth_optimization,
+        run_crane_optimization,
+        run_route_optimization,
+    )
 
 router = APIRouter(prefix="/api/optimisation", tags=["Optimisation"])
 

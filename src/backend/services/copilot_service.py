@@ -10,10 +10,16 @@ from datetime import datetime
 from typing import Dict, Any, List
 from sqlalchemy.orm import Session
 
-from .ml_client import get_current_hotspots, evaluate_zones
-from .optimiser_client import run_berth_optimization, run_crane_optimization, run_route_optimization
-from .planner_client import get_72h_operations_plan
-from ..db.models import VesselModel, BerthModel, CraneModel
+try:
+    from .ml_client import get_current_hotspots, evaluate_zones
+    from .optimiser_client import run_berth_optimization, run_crane_optimization, run_route_optimization
+    from .planner_client import get_72h_operations_plan
+    from ..db.models import VesselModel, BerthModel, CraneModel
+except (ImportError, ValueError):
+    from services.ml_client import get_current_hotspots, evaluate_zones
+    from services.optimiser_client import run_berth_optimization, run_crane_optimization, run_route_optimization
+    from services.planner_client import get_72h_operations_plan
+    from db.models import VesselModel, BerthModel, CraneModel
 
 DEMO_MODE = os.getenv("DEMO_MODE", "true").lower() in ("true", "1", "yes")
 WATSONX_APIKEY = os.getenv("WATSONX_APIKEY", "")
