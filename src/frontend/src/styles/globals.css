@@ -4,70 +4,386 @@
 @tailwind utilities;
 
 :root {
-  /* MaterialM Light Theme */
-  --color-obsidian-900: 244 246 249;  /* #F4F6F9 - MaterialM canvas background */
+  /* Modern Premium SaaS Light Theme */
+  --color-obsidian-900: 248 250 252;  /* #F8FAFC - Clean slate canvas background */
   --color-obsidian-800: 255 255 255;  /* #FFFFFF - Pure crisp white card surface */
-  --color-obsidian-700: 235 243 254;  /* #EBF3FE - MaterialM active pill tint */
-  --color-obsidian-600: 229 234 238;  /* #E5EAEE - Hairline card border */
-  --color-line-rgb: 229 234 238;      /* #E5EAEE */
+  --color-obsidian-700: 241 245 249;  /* #F1F5F9 - Elevated pill & active state */
+  --color-obsidian-600: 226 232 240;  /* #E2E8F0 - Refined hairline border */
+  --color-line-rgb: 226 232 240;      /* #E2E8F0 */
   --color-line-alpha: 0.95;
-  --color-line-soft-rgb: 241 245 249;
+  --color-line-soft-rgb: 241 245 249; /* #F1F5F9 */
   --color-line-soft-alpha: 1.0;
-  --color-ink-rgb: 42 53 71;          /* #2A3547 - MaterialM Primary text */
-  --color-inksoft-rgb: 90 107 130;    /* #5A6A82 - MaterialM Secondary text */
-  --color-brand-rgb: 0 133 219;       /* #0085db - MaterialM Primary Blue */
-  --color-brand-deep-rgb: 0 116 194;  /* #0074c2 - MaterialM Blue Dark */
-  --color-brand-glow-rgb: 0 161 255;  /* #00A1FF - Vivid Sky */
-  --color-amber-rgb: 255 174 31;      /* #FFAE1F - MaterialM Warning */
-  --color-crit-rgb: 250 137 107;      /* #FA896B - MaterialM Coral / Danger */
-  --color-ok-rgb: 19 222 185;         /* #13DEB9 - MaterialM Mint / Success */
+  --color-ink-rgb: 15 23 42;          /* #0F172A - Slate 900 Primary text */
+  --color-inksoft-rgb: 71 85 105;     /* #475569 - Slate 600 Secondary text */
+  --color-brand-rgb: 2 132 199;       /* #0284C7 - Oceanic Sky Primary */
+  --color-brand-deep-rgb: 3 105 161;  /* #0369A1 - Sky 700 Dark */
+  --color-brand-glow-rgb: 56 189 248; /* #38BDF8 - Sky 400 Bright */
+  --color-amber-rgb: 245 158 11;      /* #F59E0B - Amber 500 Warning */
+  --color-crit-rgb: 239 68 68;        /* #EF4444 - Rose 500 Danger */
+  --color-ok-rgb: 16 185 129;         /* #10B981 - Emerald 500 Success */
 
-  --bg-app: #F4F6F9;
-  --text-app: #2A3547;
-  --glass-bg: #FFFFFF;
-  --glass-border: #E5EAEE;
-  --glass-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  --bg-app: #F8FAFC;
+  --text-app: #0F172A;
+  --surface-card: #FFFFFF;
+  --surface-hover: #F8FAFC;
+  --border-subtle: #E2E8F0;
+  --border-hover: #CBD5E1;
+
+  --glass-bg: rgba(255, 255, 255, 0.94);
+  --glass-border: #E2E8F0;
+  --glass-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
   --glass-strong-bg: #FFFFFF;
-  --glass-strong-border: #E5EAEE;
-  --glass-strong-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  --scrollbar-thumb: rgba(0, 133, 219, 0.25);
+  --glass-strong-border: #E2E8F0;
+  --glass-strong-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --scrollbar-thumb: rgba(2, 132, 199, 0.25);
   --map-land: #E2E8F0;
   --map-pier: #CBD5E1;
   --map-block: #E2E8F0;
-  --map-water: #EBF3FE;
+  --map-water: #F0F9FF;
 }
 
-/* MaterialM Dark Theme (as seen in Image 3) */
+/* Modern Sleek Command Center Dark Theme — High-Contrast Oceanic Obsidian */
 html.dark, [data-theme="dark"] {
-  --color-obsidian-900: 17 28 45;     /* #111c2d - Deep navy canvas */
-  --color-obsidian-800: 23 35 55;     /* #172337 - Card surface */
-  --color-obsidian-700: 34 51 77;     /* #22334d - Active pill / elevate */
-  --color-obsidian-600: 42 62 92;     /* #2a3e5c - Dark border */
-  --color-line-rgb: 34 51 77;
-  --color-line-alpha: 0.9;
-  --color-line-soft-rgb: 42 62 92;
-  --color-line-soft-alpha: 0.8;
-  --color-ink-rgb: 226 232 240;       /* Slate 200 */
-  --color-inksoft-rgb: 148 163 184;   /* Slate 400 */
-  --color-brand-rgb: 0 133 219;
-  --color-brand-deep-rgb: 0 116 194;
-  --color-brand-glow-rgb: 0 161 255;
-  --color-amber-rgb: 255 174 31;
-  --color-crit-rgb: 250 137 107;
-  --color-ok-rgb: 19 222 185;
+  --color-obsidian-900: 8 13 26;       /* #080D1A - Deep navy obsidian canvas */
+  --color-obsidian-800: 15 23 42;      /* #0F172A - Lustrous slate 900 card surface */
+  --color-obsidian-700: 22 34 56;      /* #162238 - Elevated pill / active hover */
+  --color-obsidian-600: 33 49 77;      /* #21314D - Hairline border */
+  --color-line-rgb: 30 41 59;          /* Slate 800 */
+  --color-line-alpha: 0.65;
+  --color-line-soft-rgb: 33 49 77;
+  --color-line-soft-alpha: 0.5;
+  --color-ink-rgb: 255 255 255;        /* Slate 50 Pure White Primary text */
+  --color-inksoft-rgb: 203 213 225;    /* Slate 200 High-Contrast Secondary text */
+  --color-brand-rgb: 56 189 248;       /* #38BDF8 - Sky 400 */
+  --color-brand-deep-rgb: 2 132 199;   /* #0284C7 - Sky 600 */
+  --color-brand-glow-rgb: 125 211 252; /* #7DD3FC - Sky 300 */
+  --color-amber-rgb: 251 191 36;       /* #FBBF24 - Amber 400 */
+  --color-crit-rgb: 248 113 113;       /* #F87171 - Rose 400 */
+  --color-ok-rgb: 52 211 153;          /* #34D399 - Emerald 400 */
 
-  --bg-app: #111c2d;
-  --text-app: #E2E8F0;
-  --glass-bg: #172337;
-  --glass-border: #22334d;
-  --glass-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
-  --glass-strong-bg: #172337;
-  --glass-strong-border: #22334d;
-  --glass-strong-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  --bg-app: #080D1A;
+  --text-app: #FFFFFF;
+  --surface-card: #0F172A;
+  --surface-hover: #162238;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(56, 189, 248, 0.35);
+
+  --glass-bg: rgba(15, 23, 42, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --glass-strong-bg: rgba(15, 23, 42, 0.95);
+  --glass-strong-border: rgba(56, 189, 248, 0.22);
+  --glass-strong-shadow: 0 16px 40px -6px rgba(0, 0, 0, 0.7), 0 0 24px rgba(2, 132, 199, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --scrollbar-thumb: rgba(56, 189, 248, 0.3);
   --map-land: #1E293B;
   --map-pier: #334155;
   --map-block: #1E293B;
-  --map-water: #0F172A;
+  --map-water: #070B16;
+}
+
+/* ── Universal High-Contrast Dark Mode Foundations ─────────────────────── */
+html.dark,
+html.dark body,
+html.dark #root {
+  color: #FFFFFF !important;
+  background-color: #080D1A !important;
+}
+
+/* Force dark backgrounds on all core card and canvas surfaces */
+html.dark .bg-surface,
+.dark .bg-surface,
+[data-theme="dark"] .bg-surface,
+html.dark header,
+.dark header,
+html.dark aside,
+.dark aside {
+  background-color: #0F172A !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html.dark .bg-canvas,
+.dark .bg-canvas,
+[data-theme="dark"] .bg-canvas {
+  background-color: #080D1A !important;
+}
+
+html.dark .border-line,
+.dark .border-line,
+[data-theme="dark"] .border-line,
+html.dark .border-cardBorder,
+.dark .border-cardBorder {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ── Universal High-Contrast Text Visibility in Dark Mode ──────────────── */
+html.dark .text-ink,
+.dark .text-ink {
+  color: #FFFFFF !important;
+}
+
+html.dark .text-inksoft,
+.dark .text-inksoft {
+  color: #CBD5E1 !important; /* Bright, crystal-clear Slate 200 */
+}
+
+html.dark .text-inksoft\/80,
+.dark .text-inksoft\/80 {
+  color: #CBD5E1 !important;
+}
+
+html.dark .text-inksoft\/60,
+.dark .text-inksoft\/60,
+html.dark .text-inksoft\/50,
+.dark .text-inksoft\/50,
+html.dark .text-inksoft\/40,
+.dark .text-inksoft\/40 {
+  color: #94A3B8 !important; /* Crisp Slate 400 - high contrast on dark */
+}
+
+/* Headings and titles in Dark Mode */
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6,
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6 {
+  color: #FFFFFF !important;
+}
+
+/* Vibrant Oceanic Accents in Dark Mode — replace dark blue with glowing sky */
+html.dark .text-\[\#0085db\],
+.dark .text-\[\#0085db\],
+html.dark .text-\[\#0284C7\],
+.dark .text-\[\#0284C7\],
+html.dark .text-\[\#0369A1\],
+.dark .text-\[\#0369A1\] {
+  color: #38BDF8 !important; /* Bright Electric Sky 400 */
+}
+
+html.dark .border-\[\#0085db\],
+.dark .border-\[\#0085db\],
+html.dark .border-\[\#0284C7\],
+.dark .border-\[\#0284C7\] {
+  border-color: #38BDF8 !important;
+}
+
+/* Sub-card & Table backgrounds in Dark Mode */
+html.dark .bg-slate-50,
+.dark .bg-slate-50,
+html.dark .bg-slate-50\/70,
+.dark .bg-slate-50\/70 {
+  background-color: rgba(30, 41, 59, 0.55) !important;
+}
+
+html.dark .bg-slate-100,
+.dark .bg-slate-100,
+html.dark .bg-slate-100\/90,
+.dark .bg-slate-100\/90 {
+  background-color: rgba(30, 41, 59, 0.8) !important;
+}
+
+html.dark .bg-white,
+.dark .bg-white {
+  background-color: #0F172A !important;
+}
+
+/* Soft Pill and Badge Translucent Glow Backgrounds */
+html.dark .bg-sky-50,
+.dark .bg-sky-50,
+html.dark .bg-sky-50\/60,
+.dark .bg-sky-50\/60,
+html.dark .bg-sky-100,
+.dark .bg-sky-100 {
+  background-color: rgba(2, 132, 199, 0.20) !important;
+}
+
+html.dark .border-sky-100,
+.dark .border-sky-100,
+html.dark .border-sky-200,
+.dark .border-sky-200 {
+  border-color: rgba(56, 189, 248, 0.3) !important;
+}
+
+html.dark .bg-emerald-50,
+.dark .bg-emerald-50,
+html.dark .bg-emerald-50\/50,
+.dark .bg-emerald-50\/50,
+html.dark .bg-emerald-100,
+.dark .bg-emerald-100 {
+  background-color: rgba(16, 185, 129, 0.20) !important;
+}
+
+html.dark .border-emerald-200,
+.dark .border-emerald-200,
+html.dark .border-emerald-300,
+.dark .border-emerald-300 {
+  border-color: rgba(52, 211, 153, 0.3) !important;
+}
+
+html.dark .bg-amber-50,
+.dark .bg-amber-50,
+html.dark .bg-amber-100,
+.dark .bg-amber-100 {
+  background-color: rgba(245, 158, 11, 0.20) !important;
+}
+
+html.dark .border-amber-200,
+.dark .border-amber-200,
+html.dark .border-amber-300,
+.dark .border-amber-300 {
+  border-color: rgba(251, 191, 36, 0.3) !important;
+}
+
+html.dark .bg-rose-50,
+.dark .bg-rose-50,
+html.dark .bg-rose-100,
+.dark .bg-rose-100 {
+  background-color: rgba(239, 68, 68, 0.20) !important;
+}
+
+html.dark .border-rose-200,
+.dark .border-rose-200,
+html.dark .border-rose-300,
+.dark .border-rose-300 {
+  border-color: rgba(248, 113, 113, 0.3) !important;
+}
+
+/* Fix any hardcoded dark text classes so they are brilliant in dark mode */
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-gray-900,
+html.dark .text-gray-800,
+html.dark .text-zinc-900,
+html.dark .text-zinc-800,
+html.dark .text-black {
+  color: #FFFFFF !important;
+}
+
+html.dark .text-slate-700,
+html.dark .text-slate-600,
+html.dark .text-gray-700,
+html.dark .text-gray-600,
+html.dark .text-zinc-700,
+html.dark .text-zinc-600 {
+  color: #E2E8F0 !important; /* Crisp Slate 100 */
+}
+
+html.dark .text-slate-500,
+html.dark .text-gray-500,
+html.dark .text-zinc-500 {
+  color: #CBD5E1 !important; /* Slate 200 */
+}
+
+/* Dark mode badge & status pill text contrast */
+html.dark .text-emerald-700,
+html.dark .text-emerald-800 {
+  color: #34D399 !important; /* Emerald 400 */
+}
+
+html.dark .text-sky-700,
+html.dark .text-sky-800 {
+  color: #38BDF8 !important; /* Sky 400 */
+}
+
+html.dark .text-amber-700,
+html.dark .text-amber-800 {
+  color: #FBBF24 !important; /* Amber 400 */
+}
+
+html.dark .text-rose-700,
+html.dark .text-rose-800 {
+  color: #FB7185 !important; /* Rose 400 */
+}
+
+html.dark .text-purple-700,
+html.dark .text-purple-800 {
+  color: #C084FC !important; /* Purple 400 */
+}
+
+html.dark .text-indigo-700,
+html.dark .text-indigo-800 {
+  color: #818CF8 !important; /* Indigo 400 */
+}
+
+html.dark .text-teal-700,
+html.dark .text-teal-800 {
+  color: #2DD4BF !important; /* Teal 400 */
+}
+
+/* Atmospheric Ambient Vignette in Dark Mode */
+html.dark body {
+  background-color: #080D1A !important;
+  color: #FFFFFF !important;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(2, 132, 199, 0.14) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 35% at 95% 15%, rgba(124, 58, 237, 0.09) 0%, transparent 55%),
+    radial-gradient(circle at 5% 85%, rgba(16, 185, 129, 0.06) 0%, transparent 45%) !important;
+  background-attachment: fixed !important;
+}
+
+/* Enhanced Dark Mode Card Hierarchy & Glow Hovers */
+html.dark .saas-card {
+  background-color: #0F172A !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+html.dark .saas-card:hover, html.dark .saas-card-hover:hover {
+  border-color: rgba(56, 189, 248, 0.35) !important;
+  box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.7), 0 0 20px rgba(56, 189, 248, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Enhanced Dark Mode Inputs, Dropdowns & Controls */
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark select,
+html.dark textarea {
+  background-color: rgba(11, 17, 30, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #F8FAFC !important;
+}
+
+html.dark input:not([type="checkbox"]):not([type="radio"]):focus,
+html.dark select:focus,
+html.dark textarea:focus {
+  border-color: #38BDF8 !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25) !important;
+  background-color: rgba(15, 23, 42, 0.95) !important;
+}
+
+/* Dark Mode Table Enhancements */
+html.dark table thead tr {
+  background-color: rgba(11, 17, 30, 0.85);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+html.dark table tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background-color 0.15s ease;
+}
+
+html.dark table tbody tr:hover {
+  background-color: rgba(56, 189, 248, 0.05) !important;
+}
+
+/* Dark Mode Scrollbars with Glow Thumb */
+html.dark ::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.25) !important;
+  border-radius: 9999px !important;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.5) !important;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.5) !important;
+}
+
+html.dark ::-webkit-scrollbar-track {
+  background: rgba(8, 13, 26, 0.6) !important;
 }
 
 html, body, #root {
@@ -75,21 +391,37 @@ html, body, #root {
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', 'Manrope', 'Inter', system-ui, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--bg-app);
   color: var(--text-app);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Smooth Cross-Theme Transitions for all UI Elements */
+/* Smooth Cross-Theme Transitions */
 body, div, aside, header, nav, section, main, footer, button, input, select, table {
   transition-property: background-color, border-color, color, fill, stroke, box-shadow;
-  transition-duration: 220ms;
+  transition-duration: 200ms;
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.wave path {
-  fill: currentColor;
+/* Reusable Modern SaaS Card Styles */
+.saas-card {
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem; /* 16px */
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.saas-card-hover {
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.saas-card-hover:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-hover);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
 }
 
 /* Glassmorphism Panel System */
@@ -97,8 +429,8 @@ body, div, aside, header, nav, section, main, footer, button, input, select, tab
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .glass-strong {
@@ -109,6 +441,47 @@ body, div, aside, header, nav, section, main, footer, button, input, select, tab
   -webkit-backdrop-filter: blur(24px);
 }
 
+/* Colorful Gradient Text & Accent Classes */
+.gradient-text-cyan-blue {
+  background: linear-gradient(135deg, #22D3EE 0%, #38BDF8 50%, #6366F1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-purple-pink {
+  background: linear-gradient(135deg, #818CF8 0%, #C084FC 50%, #F472B6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-blue-purple {
+  background: linear-gradient(135deg, #38BDF8 0%, #818CF8 50%, #C084FC 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Glassmorphic Modern Card with Gradient Accents */
+.glass-card-colorful {
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card-colorful:hover {
+  transform: translateY(-4px);
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 24px 50px -10px rgba(0, 0, 0, 0.6), 0 0 30px rgba(56, 189, 248, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* Subtle dot mesh background */
+.bg-mesh-dots {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
 /* Component-wise Interactive Animations */
 .card-interactive {
   transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
@@ -116,15 +489,15 @@ body, div, aside, header, nav, section, main, footer, button, input, select, tab
 
 .card-interactive:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px -3px rgba(15, 23, 42, 0.08), 0 0 16px rgba(2, 132, 199, 0.08);
-  border-color: rgba(2, 132, 199, 0.32);
+  box-shadow: 0 10px 20px -3px rgba(15, 23, 42, 0.06), 0 0 12px rgba(2, 132, 199, 0.06);
+  border-color: rgba(2, 132, 199, 0.35);
 }
 
 /* Keyframes for Component Animations */
 @keyframes cardEnter {
   0% {
     opacity: 0;
-    transform: translateY(10px) scale(0.985);
+    transform: translateY(8px) scale(0.99);
   }
   100% {
     opacity: 1;
@@ -135,34 +508,40 @@ body, div, aside, header, nav, section, main, footer, button, input, select, tab
 @keyframes beaconPulse {
   0% {
     transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(24, 110, 180, 0.5);
+    box-shadow: 0 0 0 0 rgba(2, 132, 199, 0.45);
   }
   70% {
     transform: scale(1);
-    box-shadow: 0 0 0 7px rgba(24, 110, 180, 0);
+    box-shadow: 0 0 0 7px rgba(2, 132, 199, 0);
   }
   100% {
     transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(24, 110, 180, 0);
+    box-shadow: 0 0 0 0 rgba(2, 132, 199, 0);
   }
 }
 
 .animate-card-enter {
-  animation: cardEnter 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: cardEnter 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .pulse-beacon {
   animation: beaconPulse 2.2s infinite ease-in-out;
 }
 
+/* Accessible focus ring utility */
+.saas-focus:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--bg-app), 0 0 0 4px rgba(2, 132, 199, 0.6);
+}
+
 /* Scrollbars */
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
-  border-radius: 8px;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -179,37 +558,30 @@ body, div, aside, header, nav, section, main, footer, button, input, select, tab
 }
 
 /* ── Typography & Text Overflow Fixes ────────────────────────────────── */
-
-/* Prevent any heading or label from escaping its container */
 h1, h2, h3, h4, h5, h6 {
   overflow-wrap: break-word;
   word-break: break-word;
   max-width: 100%;
 }
 
-/* Paragraph / body text should wrap naturally */
 p, li {
   overflow-wrap: break-word;
 }
 
-/* Main content area should never exceed viewport width */
 main {
   min-width: 0;
   overflow-x: hidden;
 }
 
-/* Every flex/grid child should be allowed to shrink */
 .flex > *, .grid > * {
   min-width: 0;
 }
 
-/* Page header descriptions should not overflow */
 .page-description {
   max-width: 680px;
-  line-height: 1.65;
+  line-height: 1.6;
 }
 
-/* Topbar crumb text should truncate instead of pushing out */
 .topbar-crumb {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -218,40 +590,35 @@ main {
 }
 
 /* ── Leaflet Map Overrides ──────────────────────────────────────────── */
-
-/* Ensure Leaflet map sits inside rounded containers */
 .leaflet-container {
   font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif !important;
   border-radius: inherit;
-  background: #e8edf2;
+  background: #e2e8f0;
 }
 
-/* Suppress default Leaflet focus outline rings that cause visual bleed */
 .leaflet-container:focus {
   outline: none;
 }
 
-/* Leaflet tooltip styling */
 .leaflet-tooltip {
   background: #ffffff !important;
-  border: 1px solid #e5eaee !important;
-  border-radius: 10px !important;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1) !important;
-  padding: 8px 10px !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+  padding: 6px 10px !important;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif !important;
   font-size: 11.5px !important;
-  color: #2A3547 !important;
+  color: #0F172A !important;
 }
 
 .leaflet-tooltip::before {
-  border-top-color: #e5eaee !important;
+  border-top-color: #e2e8f0 !important;
 }
 
-/* Leaflet popup */
 .leaflet-popup-content-wrapper {
-  border-radius: 14px !important;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.14) !important;
-  border: 1px solid #e5eaee !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+  border: 1px solid #e2e8f0 !important;
   padding: 0 !important;
 }
 
@@ -264,19 +631,18 @@ main {
   background: #ffffff !important;
 }
 
-/* Zoom controls */
 .leaflet-control-zoom {
-  border: 1px solid #e5eaee !important;
-  border-radius: 10px !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06) !important;
   overflow: hidden;
 }
 
 .leaflet-control-zoom a {
   background: #ffffff !important;
-  color: #2A3547 !important;
+  color: #0F172A !important;
   border: none !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
   line-height: 28px !important;
   width: 28px !important;
   height: 28px !important;
@@ -286,7 +652,6 @@ main {
   background: #f1f5f9 !important;
 }
 
-/* Fix Leaflet z-index layering inside modals */
 .leaflet-pane,
 .leaflet-tile,
 .leaflet-marker-icon,
@@ -302,33 +667,31 @@ main {
   top: 0;
 }
 
-/* Dark mode Leaflet adjustments */
 html.dark .leaflet-tooltip {
-  background: #172337 !important;
-  border-color: #22334d !important;
-  color: #e2e8f0 !important;
+  background: #131D2E !important;
+  border-color: #1E293B !important;
+  color: #f8fafc !important;
 }
 
 html.dark .leaflet-popup-content-wrapper {
-  background: #172337 !important;
-  border-color: #22334d !important;
-  color: #e2e8f0 !important;
+  background: #131D2E !important;
+  border-color: #1E293B !important;
+  color: #f8fafc !important;
 }
 
 html.dark .leaflet-popup-tip {
-  background: #172337 !important;
+  background: #131D2E !important;
 }
 
 html.dark .leaflet-control-zoom a {
-  background: #172337 !important;
-  color: #e2e8f0 !important;
+  background: #131D2E !important;
+  color: #f8fafc !important;
 }
 
 html.dark .leaflet-control-zoom a:hover {
-  background: #22334d !important;
+  background: #1C2A40 !important;
 }
 
-/* Custom Marker Styling & Pulse animations */
 .custom-map-pin {
   background: transparent !important;
   border: none !important;
@@ -352,4 +715,3 @@ html.dark .leaflet-control-zoom a:hover {
 .animate-map-pulse {
   animation: map-pulse 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
-

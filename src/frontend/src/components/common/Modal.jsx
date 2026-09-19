@@ -12,7 +12,7 @@ export default function Modal({
   title,
   subtitle,
   children,
-  maxWidth = 'max-w-md',
+  maxWidth = 'max-w-lg',
   footer = null
 }) {
   const panelRef = useRef(null)
@@ -25,7 +25,6 @@ export default function Modal({
     if (isOpen) {
       document.addEventListener('keydown', handleKeyDown)
       document.body.style.overflow = 'hidden'
-      // Focus initial element inside modal
       setTimeout(() => {
         panelRef.current?.focus()
       }, 50)
@@ -45,7 +44,7 @@ export default function Modal({
           initial="initial"
           animate="animate"
           exit="exit"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm"
           onClick={onClose}
           role="dialog"
           aria-modal="true"
@@ -58,29 +57,32 @@ export default function Modal({
             initial="initial"
             animate="animate"
             exit="exit"
-            className={`w-full ${maxWidth} glass-strong border border-lineSoft rounded-2xl shadow-2xl overflow-hidden focus:outline-none`}
+            className={`w-full ${maxWidth} bg-surface border border-line rounded-2xl shadow-2xl overflow-hidden focus:outline-none flex flex-col max-h-[90vh]`}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between p-5 border-b border-line bg-obsidian-800/40">
+            {/* Header */}
+            <div className="flex items-start justify-between p-5 sm:p-6 border-b border-line bg-slate-50/50 dark:bg-slate-800/30">
               <div>
-                <h3 className="text-base font-semibold text-ink">{title}</h3>
-                {subtitle && <p className="text-xs text-inksoft mt-1 leading-normal">{subtitle}</p>}
+                <h3 className="text-base sm:text-lg font-bold text-ink tracking-tight">{title}</h3>
+                {subtitle && <p className="text-xs sm:text-sm text-inksoft mt-1 leading-normal">{subtitle}</p>}
               </div>
               <button
                 onClick={onClose}
                 aria-label="Close modal"
-                className="text-inksoft hover:text-ink w-7 h-7 rounded-lg flex items-center justify-center hover:bg-obsidian-700/60 transition-colors"
+                className="text-inksoft hover:text-ink w-8 h-8 rounded-xl flex items-center justify-center hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors cursor-pointer flex-none ml-3"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 6L6 18M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <div className="p-5 max-h-[75vh] overflow-y-auto">{children}</div>
+            {/* Content Body */}
+            <div className="p-5 sm:p-6 overflow-y-auto flex-1">{children}</div>
 
+            {/* Footer */}
             {footer && (
-              <div className="p-4 bg-obsidian-800/80 border-t border-line flex items-center justify-end gap-2.5">
+              <div className="p-4 sm:p-5 bg-slate-50/70 dark:bg-slate-800/50 border-t border-line flex items-center justify-end gap-3">
                 {footer}
               </div>
             )}

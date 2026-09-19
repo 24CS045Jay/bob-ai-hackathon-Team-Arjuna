@@ -13,7 +13,7 @@ export default function Input({
   return (
     <div className={`relative flex items-center w-full ${className}`}>
       {icon && (
-        <span className="absolute left-3 text-inksoft pointer-events-none flex items-center">
+        <span className="absolute left-3.5 text-inksoft pointer-events-none flex items-center justify-center">
           {icon}
         </span>
       )}
@@ -22,9 +22,9 @@ export default function Input({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className={`w-full glass border border-line rounded-lg py-2 text-xs text-ink placeholder:text-inksoft/60 focus:outline-none focus:border-brand/60 focus:ring-1 focus:ring-brand/40 transition-colors ${
-          icon ? 'pl-9' : 'pl-3'
-        } ${clearable && value ? 'pr-8' : 'pr-3'} ${mono ? 'font-mono' : ''}`}
+        className={`w-full bg-surface border border-line rounded-xl py-2.5 text-xs text-ink placeholder:text-inksoft/60 focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 shadow-2xs transition-all ${
+          icon ? 'pl-10' : 'pl-3.5'
+        } ${clearable && value ? 'pr-9' : 'pr-3.5'} ${mono ? 'font-mono' : ''}`}
         {...props}
       />
       {clearable && value && (
@@ -32,7 +32,7 @@ export default function Input({
           type="button"
           onClick={onClear || (() => onChange({ target: { value: '' } }))}
           aria-label="Clear input"
-          className="absolute right-2.5 text-inksoft hover:text-ink text-xs p-1 rounded hover:bg-obsidian-700/60 transition-colors"
+          className="absolute right-3 text-inksoft hover:text-ink text-xs w-5 h-5 rounded-md flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
         >
           ✕
         </button>
