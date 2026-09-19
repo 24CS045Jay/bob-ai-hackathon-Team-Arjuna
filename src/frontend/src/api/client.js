@@ -191,3 +191,17 @@ export async function evaluateReroute(payload) {
   return data
 }
 
+export async function saveRouteDecision(mmsi, status, notes = '') {
+  const data = await safeFetch(`/api/vessels/${mmsi}/route-decision`, {
+    method: 'POST',
+    body: JSON.stringify({ status, notes, operator_name: 'Port Controller' }),
+  })
+  return data
+}
+
+export async function fetchRouteDecision(mmsi) {
+  const data = await safeFetch(`/api/vessels/${mmsi}/route-decision`)
+  return data
+}
+
+

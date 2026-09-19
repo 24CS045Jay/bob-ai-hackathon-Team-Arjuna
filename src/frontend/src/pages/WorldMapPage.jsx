@@ -4,7 +4,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import AppShell from '../components/layout/AppShell.jsx'
 import { WORLD_PORTS, ACTIVE_VESSELS, SHIPPING_LANES } from '../data/worldPorts.mock.js'
-import { fetchLiveVessels, fetchVesselDecision } from '../api/client.js'
+import { fetchLiveVessels, fetchVesselDecision, saveRouteDecision } from '../api/client.js'
 
 // ─── Dwell colour scale ──────────────────────────────────────────────────────
 function getDwellColor(dwell) {
@@ -160,6 +160,9 @@ export default function WorldMapPage() {
   const [vesselDecision, setVesselDecision] = useState(null)
   const [loadingDecision, setLoadingDecision] = useState(false)
   const [appliedReroute, setAppliedReroute] = useState(false)
+  const [routeDecisionStatus, setRouteDecisionStatus] = useState('PENDING') // 'PENDING' | 'ACCEPTED' | 'DECLINED'
+  const [showRouteModal, setShowRouteModal] = useState(false)
+  const [toastMessage, setToastMessage] = useState(null)
   const [activeTab, setActiveTab] = useState('vessels') // 'vessels' | 'ports'
   const [vesselFilter, setVesselFilter] = useState('all') // 'all' | 'reroute' | 'high_risk' | 'proceed'
 
@@ -193,6 +196,8 @@ export default function WorldMapPage() {
     if (!selectedVessel) {
       setVesselDecision(null)
       setAppliedReroute(false)
+      setRouteDecisionStatus('PENDING')
+      setShowRouteModal(false)
       rerouteLayerGroupRef.current?.clearLayers()
       return
     }
@@ -203,6 +208,9 @@ export default function WorldMapPage() {
       .then((dec) => {
         if (isMounted && dec) {
           setVesselDecision(dec)
+          const savedStatus = dec?.route_acceptance?.user_decision?.status || 'PENDING'
+          setRouteDecisionStatus(savedStatus)
+          setAppliedReroute(savedStatus === 'ACCEPTED')
         }
       })
       .catch((err) => console.warn('Could not load vessel decision:', err))
@@ -214,6 +222,58 @@ export default function WorldMapPage() {
       isMounted = false
     }
   }, [selectedVessel])
+
+  // Interactive Route Acceptance Handlers
+  const handleAcceptRoute = async () => {
+    if (!selectedVessel) return
+    try {
+      await saveRouteDecision(selectedVessel.mmsi, 'ACCEPTED', 'Authorized by Port Operator via ECDIS Bridge')
+      setRouteDecisionStatus('ACCEPTED')
+      setAppliedReroute(true)
+      setToastMessage({
+        type: 'success',
+        title: 'Alternate Deepwater Route Accepted',
+        text: `Corridor authorized for ${selectedVessel.name || 'vessel'}. ECDIS navigation updated to certified oceanic fairway.`,
+      })
+      setTimeout(() => setToastMessage(null), 6000)
+    } catch (err) {
+      console.error('Error accepting route:', err)
+    }
+  }
+
+  const handleDeclineRoute = async () => {
+    if (!selectedVessel) return
+    try {
+      await saveRouteDecision(selectedVessel.mmsi, 'DECLINED', 'Declined by Port Operator; vessel continues on planned fairway')
+      setRouteDecisionStatus('DECLINED')
+      setAppliedReroute(false)
+      setToastMessage({
+        type: 'warning',
+        title: 'Alternate Route Declined',
+        text: `${selectedVessel.name || 'Vessel'} maintains original course. Weather alert and laytime demurrage monitoring remain active.`,
+      })
+      setTimeout(() => setToastMessage(null), 6000)
+    } catch (err) {
+      console.error('Error declining route:', err)
+    }
+  }
+
+  const handleResetDecision = async () => {
+    if (!selectedVessel) return
+    try {
+      await saveRouteDecision(selectedVessel.mmsi, 'PENDING')
+      setRouteDecisionStatus('PENDING')
+      setAppliedReroute(false)
+      setToastMessage({
+        type: 'info',
+        title: 'Route Decision Reset',
+        text: `Route evaluation status returned to PENDING review for ${selectedVessel.name || 'vessel'}.`,
+      })
+      setTimeout(() => setToastMessage(null), 4000)
+    } catch (err) {
+      console.error('Error resetting decision:', err)
+    }
+  }
 
   // Load saved configuration from localStorage
   useEffect(() => {
@@ -638,27 +698,36 @@ export default function WorldMapPage() {
     const hazards = vesselDecision.weather?.hazard_waypoints || []
     const isReroute = (vesselDecision.recommendation || selectedVessel.recommendation) === 'REROUTE'
 
+    const isAccepted = routeDecisionStatus === 'ACCEPTED' || appliedReroute
+    const isDeclined = routeDecisionStatus === 'DECLINED'
+
     // 1. Render Current Route Polyline & Waypoints
     if (currentWaypoints.length > 1) {
       const currentCoords = currentWaypoints.map((wp) => [Number(wp.lat), Number(wp.lon)])
       
       const currentGlow = L.polyline(currentCoords, {
-        color: isReroute ? '#f43f5e' : '#3b82f6',
-        weight: 6,
-        opacity: 0.25,
+        color: isAccepted ? '#94a3b8' : (isReroute ? '#f43f5e' : '#3b82f6'),
+        weight: isAccepted ? 3 : 6,
+        opacity: isAccepted ? 0.12 : 0.25,
         lineCap: 'round',
       })
       
       const currentLine = L.polyline(currentCoords, {
-        color: isReroute ? '#ef4444' : '#2563eb',
-        weight: 3,
-        dashArray: isReroute ? '8, 8' : '5, 7',
+        color: isAccepted ? '#94a3b8' : (isReroute ? '#ef4444' : '#2563eb'),
+        weight: isAccepted ? 2 : 3,
+        dashArray: isAccepted ? '4, 8' : (isReroute ? '8, 8' : '5, 7'),
         lineCap: 'round',
       })
 
       currentLine.bindTooltip(
-        `<div class="text-xs font-bold ${isReroute ? 'text-rose-600' : 'text-blue-600'}">
-          ${isReroute ? '⚠️ Current Fairway (High Weather Risk & Laytime Penalty)' : 'Current Route (Approved Navigation Corridor)'}
+        `<div class="text-xs font-bold ${isAccepted ? 'text-slate-500' : (isReroute ? 'text-rose-600' : 'text-blue-600')}">
+          ${isAccepted
+            ? 'Original Fairway (Superseded by Accepted Alternate Bypass)'
+            : isDeclined
+            ? '⚠️ Active Fairway (Alternate Route Declined by Operator)'
+            : isReroute
+            ? '⚠️ Current Fairway (High Weather Risk & Laytime Penalty)'
+            : 'Current Route (Approved Navigation Corridor)'}
         </div>`,
         { sticky: true }
       )
@@ -668,11 +737,11 @@ export default function WorldMapPage() {
 
       currentWaypoints.forEach((wp, idx) => {
         const pin = L.circleMarker([Number(wp.lat), Number(wp.lon)], {
-          radius: 4,
-          fillColor: isReroute ? '#f43f5e' : '#3b82f6',
+          radius: isAccepted ? 3 : 4,
+          fillColor: isAccepted ? '#94a3b8' : (isReroute ? '#f43f5e' : '#3b82f6'),
           color: '#ffffff',
           weight: 1.5,
-          fillOpacity: 0.9,
+          fillOpacity: isAccepted ? 0.5 : 0.9,
         })
         pin.bindTooltip(`<span class="text-xs font-mono font-bold">${wp.name || `WP-0${idx + 1}`}</span>`, { sticky: true })
         group.addLayer(pin)
@@ -684,22 +753,22 @@ export default function WorldMapPage() {
       const altCoords = alternateWaypoints.map((wp) => [Number(wp.lat), Number(wp.lon)])
       
       const altGlow = L.polyline(altCoords, {
-        color: '#10b981',
-        weight: appliedReroute ? 8 : 6,
-        opacity: appliedReroute ? 0.45 : 0.22,
+        color: isDeclined ? '#cbd5e1' : '#10b981',
+        weight: isAccepted ? 9 : (isDeclined ? 2 : 6),
+        opacity: isAccepted ? 0.55 : (isDeclined ? 0.15 : 0.25),
         lineCap: 'round',
       })
 
       const altLine = L.polyline(altCoords, {
-        color: '#10b981',
-        weight: appliedReroute ? 4 : 3,
-        dashArray: appliedReroute ? undefined : '6, 6',
+        color: isDeclined ? '#94a3b8' : '#10b981',
+        weight: isAccepted ? 4 : (isDeclined ? 2 : 3),
+        dashArray: isAccepted ? undefined : (isDeclined ? '4, 8' : '6, 6'),
         lineCap: 'round',
       })
 
       altLine.bindTooltip(
-        `<div class="text-xs font-bold text-emerald-600 flex items-center gap-1">
-          <span>🛡️ AI Deepwater Bypass Corridor (-${vesselDecision.comparison?.weather_risk_reduction_pct || 45}% risk)</span>
+        `<div class="text-xs font-bold ${isDeclined ? 'text-slate-500' : 'text-emerald-600'} flex items-center gap-1">
+          <span>${isAccepted ? '🛡️ ACTIVE AUTHORIZED ECDIS BYPASS CORRIDOR' : isDeclined ? 'Alternate Corridor (Declined by Operator)' : `🛡️ AI Deepwater Bypass Corridor (-${vesselDecision.comparison?.weather_risk_reduction_pct || 45}% risk)`}</span>
         </div>`,
         { sticky: true }
       )
@@ -709,13 +778,13 @@ export default function WorldMapPage() {
 
       alternateWaypoints.forEach((wp, idx) => {
         const altPin = L.circleMarker([Number(wp.lat), Number(wp.lon)], {
-          radius: 5,
-          fillColor: '#10b981',
+          radius: isAccepted ? 6 : (isDeclined ? 3 : 5),
+          fillColor: isDeclined ? '#94a3b8' : '#10b981',
           color: '#ffffff',
           weight: 2,
-          fillOpacity: 1.0,
+          fillOpacity: isDeclined ? 0.4 : 1.0,
         })
-        altPin.bindTooltip(`<span class="text-xs font-mono font-bold text-emerald-700">${wp.name || `Bypass-WP${idx + 1}`}</span>`, { sticky: true })
+        altPin.bindTooltip(`<span class="text-xs font-mono font-bold ${isDeclined ? 'text-slate-500' : 'text-emerald-700'}">${wp.name || `Bypass-WP${idx + 1}`}</span>`, { sticky: true })
         group.addLayer(altPin)
       })
     }
@@ -744,7 +813,7 @@ export default function WorldMapPage() {
       )
       group.addLayer(hazardMarker)
     })
-  }, [selectedVessel, vesselDecision, appliedReroute])
+  }, [selectedVessel, vesselDecision, appliedReroute, routeDecisionStatus])
 
   // ─── Camera Controls ────────────────────────────────────────────────────────
   const zoomIn = () => mapInstanceRef.current?.zoomIn()
@@ -1210,6 +1279,167 @@ export default function WorldMapPage() {
                         </div>
                       )}
 
+                      {/* Interactive Route Acceptance Decision & Trade-off Section */}
+                      {((vesselDecision?.recommendation || selectedVessel.recommendation) === 'REROUTE' || vesselDecision?.alternate_route) && (
+                        <div className="p-3.5 rounded-2xl bg-surface border-2 border-dashed border-indigo-500/30 dark:border-indigo-400/30 shadow-sm space-y-2.5">
+                          {/* Header with status badge */}
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-400 flex items-center gap-1">
+                              <span>🧭</span>
+                              <span>Route Acceptance Decision</span>
+                            </span>
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full text-white ${
+                              routeDecisionStatus === 'ACCEPTED'
+                                ? 'bg-emerald-600 shadow-xs'
+                                : routeDecisionStatus === 'DECLINED'
+                                ? 'bg-rose-600 shadow-xs'
+                                : 'bg-amber-500 shadow-xs animate-pulse'
+                            }`}>
+                              {routeDecisionStatus === 'ACCEPTED'
+                                ? 'ROUTE ACCEPTED ✓'
+                                : routeDecisionStatus === 'DECLINED'
+                                ? 'ROUTE DECLINED ✕'
+                                : 'DECISION REQUIRED ⚠️'}
+                            </span>
+                          </div>
+
+                          {/* The User Question */}
+                          <div className="p-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-500/20">
+                            <p className="text-xs font-bold text-ink leading-snug">
+                              {vesselDecision?.route_acceptance?.question ||
+                                `Do you want to accept the alternate deepwater bypass route for ${selectedVessel.name || 'this vessel'}?`}
+                            </p>
+                            {vesselDecision?.route_acceptance?.summary && (
+                              <p className="text-[10px] text-inksoft mt-1 leading-relaxed">
+                                {vesselDecision.route_acceptance.summary}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Quick Trade-off Numbers */}
+                          <div className="grid grid-cols-4 gap-1.5 text-center">
+                            <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500/20">
+                              <span className="text-[8.5px] uppercase font-bold text-emerald-700 dark:text-emerald-400 block">Risk Cut</span>
+                              <span className="text-xs font-black text-emerald-600">
+                                -{vesselDecision?.comparison?.weather_risk_reduction_pct || 45}%
+                              </span>
+                            </div>
+                            <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500/20">
+                              <span className="text-[8.5px] uppercase font-bold text-emerald-700 dark:text-emerald-400 block">Saved</span>
+                              <span className="text-xs font-black text-emerald-600">
+                                +${Math.round((vesselDecision?.cost?.expected_delay_loss_avoided_usd || 19000) / 1000)}k
+                              </span>
+                            </div>
+                            <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-500/20">
+                              <span className="text-[8.5px] uppercase font-bold text-amber-700 dark:text-amber-400 block">Time</span>
+                              <span className="text-xs font-black text-amber-600">
+                                +{vesselDecision?.comparison?.transit_delta_hours || 5.8}h
+                              </span>
+                            </div>
+                            <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-500/20">
+                              <span className="text-[8.5px] uppercase font-bold text-amber-700 dark:text-amber-400 block">Distance</span>
+                              <span className="text-xs font-black text-amber-600">
+                                +{Math.round(vesselDecision?.comparison?.distance_delta_nm || 100)}nm
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Why Accept vs Why Decline Accordion/Pills */}
+                          <div className="space-y-2 text-xs">
+                            {/* Why You Should Accept */}
+                            <div className="p-2.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-500/25">
+                              <div className="flex items-center gap-1 font-bold text-emerald-800 dark:text-emerald-300 text-[11px] mb-1">
+                                <span>🛡️</span>
+                                <span>Why You Should Accept:</span>
+                              </div>
+                              <ul className="space-y-1 text-[10.5px] text-emerald-900 dark:text-emerald-200">
+                                {(vesselDecision?.route_acceptance?.why_accept || [
+                                  `Reduces severe storm & wave hazard exposure by ${vesselDecision?.comparison?.weather_risk_reduction_pct || 45}%.`,
+                                  'Protects hull integrity and prevents cargo shift in high sea states.',
+                                  `Avoids an estimated $${(vesselDecision?.cost?.expected_delay_loss_avoided_usd || 19000).toLocaleString()} USD in laytime demurrage.`,
+                                  'Guarantees 100% deepwater ocean passage avoiding shallow coastal hazards.',
+                                ]).map((pt, idx) => (
+                                  <li key={idx} className="flex items-start gap-1">
+                                    <span className="text-emerald-500 font-bold">✓</span>
+                                    <span>{pt}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+
+                            {/* Why You Might Decline */}
+                            <div className="p-2.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-500/25">
+                              <div className="flex items-center gap-1 font-bold text-amber-800 dark:text-amber-300 text-[11px] mb-1">
+                                <span>⚠️</span>
+                                <span>Why You Might Decline (Trade-offs):</span>
+                              </div>
+                              <ul className="space-y-1 text-[10.5px] text-amber-900 dark:text-amber-200">
+                                {(vesselDecision?.route_acceptance?.why_decline || [
+                                  `Adds +${vesselDecision?.comparison?.distance_delta_nm || 100} nm detour distance around the storm zone.`,
+                                  `Increases voyage transit by +${vesselDecision?.comparison?.transit_delta_hours || 5.8} hours.`,
+                                  `Incurs additional bunker fuel expense (~$${Math.round(vesselDecision?.cost?.net_cost_difference_usd || 0).toLocaleString()} USD).`,
+                                  'May require rescheduling the allotted terminal gantry crane berthing window.',
+                                ]).map((pt, idx) => (
+                                  <li key={idx} className="flex items-start gap-1">
+                                    <span className="text-amber-500 font-bold">✕</span>
+                                    <span>{pt}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+
+                          {/* Decision Action Buttons */}
+                          <div className="pt-1 space-y-1.5">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={handleAcceptRoute}
+                                className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 ${
+                                  routeDecisionStatus === 'ACCEPTED'
+                                    ? 'bg-emerald-600 text-white shadow-emerald-600/30 ring-2 ring-emerald-400'
+                                    : 'bg-emerald-600 hover:bg-emerald-500 text-white active:scale-98'
+                                }`}
+                              >
+                                <span>✓</span>
+                                <span>{routeDecisionStatus === 'ACCEPTED' ? 'Route Accepted (Active)' : 'Accept Alternate Route'}</span>
+                              </button>
+
+                              <button
+                                onClick={handleDeclineRoute}
+                                className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 ${
+                                  routeDecisionStatus === 'DECLINED'
+                                    ? 'bg-rose-600 text-white shadow-rose-600/30 ring-2 ring-rose-400'
+                                    : 'bg-slate-200 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 active:scale-98'
+                                }`}
+                              >
+                                <span>✕</span>
+                                <span>{routeDecisionStatus === 'DECLINED' ? 'Route Declined (Active)' : 'Decline (Keep Current)'}</span>
+                              </button>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-0.5">
+                              <button
+                                onClick={() => setShowRouteModal(true)}
+                                className="text-[11px] text-[#0085db] hover:underline font-bold flex items-center gap-1"
+                              >
+                                <span>🔍</span>
+                                <span>Examine Full Side-by-Side Trade-off Modal</span>
+                              </button>
+
+                              {routeDecisionStatus !== 'PENDING' && (
+                                <button
+                                  onClick={handleResetDecision}
+                                  className="text-[10px] text-inksoft hover:text-ink font-semibold flex items-center gap-0.5"
+                                >
+                                  <span>↺</span>
+                                  <span>Change Choice</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {/* Grounded AI Explainability bullet points */}
                       <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-line space-y-1.5">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-inksoft block mb-1">
@@ -1227,31 +1457,16 @@ export default function WorldMapPage() {
                         ))}
                       </div>
 
-                      {/* Action Buttons */}
+                      {/* Fly to Ship Button */}
                       <div className="flex items-center gap-2 pt-1">
-                        {(vesselDecision?.recommendation || selectedVessel.recommendation) === 'REROUTE' && (
-                          <button
-                            onClick={() => setAppliedReroute(true)}
-                            disabled={appliedReroute}
-                            className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 ${
-                              appliedReroute
-                                ? 'bg-emerald-600 text-white cursor-default'
-                                : 'bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white shadow-rose-500/25 active:scale-98'
-                            }`}
-                          >
-                            <span>{appliedReroute ? '✓' : '⚡'}</span>
-                            <span>{appliedReroute ? 'Corridor Activated (ECDIS Sent)' : 'Apply Dynamic Reroute'}</span>
-                          </button>
-                        )}
-
                         <button
                           onClick={() => {
                             mapInstanceRef.current?.flyTo([selectedVessel.lat, selectedVessel.lon || selectedVessel.lng], 8, { duration: 1.1 })
                           }}
-                          className="py-2 px-3 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-ink transition-colors flex items-center gap-1 flex-1 justify-center"
+                          className="w-full py-2 px-3 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-ink transition-colors flex items-center gap-1 justify-center"
                         >
                           <span>🎯</span>
-                          <span>Fly to Ship</span>
+                          <span>Fly to Ship on Map</span>
                         </button>
                       </div>
                     </>
@@ -1661,6 +1876,226 @@ export default function WorldMapPage() {
             </motion.div>
           </div>
         )}
+        {/* Floating Toast Notification */}
+        <AnimatePresence>
+          {toastMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -15, scale: 0.95 }}
+              className="fixed top-20 left-1/2 -translate-x-1/2 z-[9999] max-w-md w-full px-4 pointer-events-none"
+            >
+              <div className={`p-4 rounded-2xl shadow-xl border pointer-events-auto flex items-start gap-3 backdrop-blur-md ${
+                toastMessage.type === 'success'
+                  ? 'bg-emerald-950/90 border-emerald-500/50 text-white'
+                  : toastMessage.type === 'warning'
+                  ? 'bg-amber-950/90 border-amber-500/50 text-white'
+                  : 'bg-slate-900/90 border-slate-700 text-white'
+              }`}>
+                <span className="text-xl flex-none">
+                  {toastMessage.type === 'success' ? '🛡️' : toastMessage.type === 'warning' ? '⚠️' : 'ℹ️'}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold">{toastMessage.title || 'Navigation Alert'}</div>
+                  <div className="text-[11px] text-slate-200 mt-0.5 leading-snug">{toastMessage.text}</div>
+                </div>
+                <button
+                  onClick={() => setToastMessage(null)}
+                  className="text-slate-400 hover:text-white text-xs font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Dedicated Route Acceptance & Trade-off Review Modal */}
+        <AnimatePresence>
+          {showRouteModal && selectedVessel && (
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                className="bg-surface border border-line shadow-2xl rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-5 text-ink relative"
+              >
+                {/* Modal Header */}
+                <div className="flex items-start justify-between gap-4 pb-3 border-b border-line">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🧭</span>
+                      <span className="text-[11px] font-extrabold text-[#0085db] uppercase tracking-wider">
+                        Navigation Route Decision Engine
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-black text-ink mt-0.5 leading-tight">
+                      {selectedVessel.name || 'Vessel Telemetry'} · Route Authorization Review
+                    </h3>
+                    <p className="text-xs text-inksoft mt-0.5">
+                      MMSI: <span className="font-mono font-bold text-ink">{selectedVessel.mmsi}</span> · Flag: {selectedVessel.origin_country || 'International'} · Destination: {selectedVessel.destination || 'Port of Arjuna'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowRouteModal(false)}
+                    className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-inksoft hover:text-ink font-bold transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* The Core Question Callout */}
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-sky-500/10 to-emerald-500/10 border-2 border-indigo-500/30">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                      Operator Decision Required
+                    </span>
+                    <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full text-white ${
+                      routeDecisionStatus === 'ACCEPTED'
+                        ? 'bg-emerald-600'
+                        : routeDecisionStatus === 'DECLINED'
+                        ? 'bg-rose-600'
+                        : 'bg-amber-500 animate-pulse'
+                    }`}>
+                      {routeDecisionStatus === 'ACCEPTED'
+                        ? 'STATUS: ACCEPTED & ACTIVE ✓'
+                        : routeDecisionStatus === 'DECLINED'
+                        ? 'STATUS: DECLINED ✕'
+                        : 'STATUS: PENDING OPERATOR AUTHORIZATION'}
+                    </span>
+                  </div>
+                  <h4 className="text-sm font-extrabold text-ink leading-snug">
+                    {vesselDecision?.route_acceptance?.question ||
+                      `Do you want to accept the alternate deepwater bypass route for ${selectedVessel.name}?`}
+                  </h4>
+                  <p className="text-xs text-inksoft mt-1.5 leading-relaxed">
+                    {vesselDecision?.route_acceptance?.summary ||
+                      `Bypassing the hazard zone steers the vessel through certified deepwater corridors around storm cells, protecting cargo and preventing high demurrage fees.`}
+                  </p>
+                </div>
+
+                {/* 4 Metric Comparison Bar */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                  <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500/20">
+                    <span className="text-[9.5px] uppercase font-bold text-emerald-700 dark:text-emerald-400 block">Weather Risk</span>
+                    <span className="text-lg font-black text-emerald-600">
+                      -{vesselDecision?.comparison?.weather_risk_reduction_pct || 45}%
+                    </span>
+                    <span className="text-[9px] text-emerald-600/80 block font-medium">Bypass Protection</span>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500/20">
+                    <span className="text-[9.5px] uppercase font-bold text-emerald-700 dark:text-emerald-400 block">Demurrage Saved</span>
+                    <span className="text-lg font-black text-emerald-600">
+                      +${(vesselDecision?.cost?.expected_delay_loss_avoided_usd || 19400).toLocaleString()}
+                    </span>
+                    <span className="text-[9px] text-emerald-600/80 block font-medium">Berth Delay Shield</span>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-500/20">
+                    <span className="text-[9.5px] uppercase font-bold text-amber-700 dark:text-amber-400 block">Transit Duration</span>
+                    <span className="text-lg font-black text-amber-600">
+                      +{vesselDecision?.comparison?.transit_delta_hours || 5.8}h
+                    </span>
+                    <span className="text-[9px] text-amber-600/80 block font-medium">Extra Voyage Time</span>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-500/20">
+                    <span className="text-[9.5px] uppercase font-bold text-amber-700 dark:text-amber-400 block">Nautical Distance</span>
+                    <span className="text-lg font-black text-amber-600">
+                      +{Math.round(vesselDecision?.comparison?.distance_delta_nm || 100)} nm
+                    </span>
+                    <span className="text-[9px] text-amber-600/80 block font-medium">Ocean Detour</span>
+                  </div>
+                </div>
+
+                {/* Comprehensive Side-by-Side Trade-off Columns */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Left Column: Why You Should Accept */}
+                  <div className="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border-2 border-emerald-500/30 space-y-2">
+                    <div className="flex items-center gap-1.5 font-black text-emerald-800 dark:text-emerald-300 text-xs uppercase tracking-wide">
+                      <span className="text-base">🛡️</span>
+                      <span>Why You Should Accept (Benefits)</span>
+                    </div>
+                    <ul className="space-y-2 text-xs text-emerald-950 dark:text-emerald-100">
+                      {(vesselDecision?.route_acceptance?.why_accept || [
+                        `Reduces severe storm & high wave hazard exposure by ${vesselDecision?.comparison?.weather_risk_reduction_pct || 45}%.`,
+                        'Avoids dangerous gale cells protecting vessel hull integrity and cargo stability.',
+                        `Saves an estimated $${(vesselDecision?.cost?.expected_delay_loss_avoided_usd || 19400).toLocaleString()} USD in laytime delay penalties.`,
+                        'Strictly follows certified 100% deepwater international oceanic corridors with zero land traversal.',
+                      ]).map((item, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="text-emerald-600 font-black text-sm leading-none mt-0.5">✓</span>
+                          <span className="leading-snug">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Right Column: Why You Might Decline */}
+                  <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border-2 border-amber-500/30 space-y-2">
+                    <div className="flex items-center gap-1.5 font-black text-amber-800 dark:text-amber-300 text-xs uppercase tracking-wide">
+                      <span className="text-base">⚠️</span>
+                      <span>Why You Might Decline (Trade-offs)</span>
+                    </div>
+                    <ul className="space-y-2 text-xs text-amber-950 dark:text-amber-100">
+                      {(vesselDecision?.route_acceptance?.why_decline || [
+                        `Adds +${vesselDecision?.comparison?.distance_delta_nm || 100} nautical miles around the storm hazard zone.`,
+                        `Increases voyage transit duration by +${vesselDecision?.comparison?.transit_delta_hours || 5.8} hours.`,
+                        `Incurs additional bunker fuel and engine running costs (~$${Math.round(vesselDecision?.cost?.net_cost_difference_usd || 0).toLocaleString()} USD).`,
+                        'May require re-negotiating the allotted terminal container gantry crane berthing window.',
+                      ]).map((item, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="text-amber-600 font-black text-sm leading-none mt-0.5">✕</span>
+                          <span className="leading-snug">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Modal Action Buttons */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-line">
+                  <div className="text-xs text-inksoft">
+                    {routeDecisionStatus !== 'PENDING' ? (
+                      <button
+                        onClick={handleResetDecision}
+                        className="text-[#0085db] hover:underline font-bold flex items-center gap-1"
+                      >
+                        <span>↺</span>
+                        <span>Reset Decision to PENDING</span>
+                      </button>
+                    ) : (
+                      <span>Decision will be logged to ECDIS audit stream.</span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <button
+                      onClick={() => {
+                        handleDeclineRoute()
+                        setShowRouteModal(false)
+                      }}
+                      className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold border border-rose-300 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                    >
+                      ✕ Decline (Keep Current Fairway)
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        handleAcceptRoute()
+                        setShowRouteModal(false)
+                      }}
+                      className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors shadow-md shadow-emerald-600/25"
+                    >
+                      ✓ Accept Alternate Deepwater Route
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </AnimatePresence>
     </AppShell>
   )

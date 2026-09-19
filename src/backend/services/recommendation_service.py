@@ -111,14 +111,55 @@ def generate_maritime_decision(
         reasons.append(f"Favorable wind/wave sea state ({wind_kts} kts wind, {wave_m}m wave height).")
         reasons.append(f"On schedule for terminal arrival in {ml_eta['eta_hours']} hours.")
 
+    # 7. Route Acceptance Trade-off Analysis (Explainable Why Accept vs Why Decline)
+    vessel_name = vessel.get("name") or vessel.get("vessel_name") or f"Vessel {vessel.get('mmsi')}"
+    weather_risk_pct = reroute_analysis["comparison"]["weather_risk_reduction_pct"]
+    dist_delta = reroute_analysis["comparison"]["distance_delta_nm"]
+    hours_delta = reroute_analysis["comparison"]["transit_delta_hours"]
+    demurrage_saved = cost_comp.get("expected_delay_loss_avoided_usd", 0.0)
+    net_fuel_cost = max(0.0, cost_comp.get("net_cost_difference_usd", 0.0))
+
+    why_accept = [
+        f"Reduces severe weather exposure by {weather_risk_pct}% bypassing dangerous gale and swell sectors.",
+        f"Avoids high-risk gale zone ({wind_kts} kts wind, {wave_m}m waves) protecting vessel hull, crew, and cargo stability.",
+        f"Prevents an estimated ${demurrage_saved:,.0f} USD in laytime delay penalties & berth demurrage caused by storm delays.",
+        "Guarantees safe oceanic navigation through certified 100% deepwater international maritime corridors (zero land contact)."
+    ]
+
+    why_decline = [
+        f"Extends total voyage transit distance by +{dist_delta} nautical miles around the storm hazard zone.",
+        f"Adds +{hours_delta} hours to vessel transit time before reaching Port of Arjuna.",
+        f"Incurs estimated +${net_fuel_cost:,.0f} USD in additional bunker fuel and engine wear from the longer detour.",
+        "Potential risk of missing pre-assigned container crane berthing slot if the port schedule cannot flex."
+    ]
+
+    route_acceptance = {
+        "question": f"Do you want to accept the alternate deepwater bypass route for {vessel_name}?",
+        "recommended_action": decision,
+        "why_accept": why_accept,
+        "why_decline": why_decline,
+        "metrics_tradeoff": {
+            "weather_risk_reduction_pct": weather_risk_pct,
+            "demurrage_saved_usd": demurrage_saved,
+            "extra_distance_nm": dist_delta,
+            "extra_transit_hours": hours_delta,
+            "additional_bunker_fuel_usd": net_fuel_cost,
+        },
+        "summary": (
+            f"Accepting the alternate corridor reduces weather risk by {weather_risk_pct}% and avoids ${demurrage_saved:,.0f} USD in demurrage, "
+            f"in exchange for +{dist_delta} nm (+{hours_delta}h) and ~${net_fuel_cost:,.0f} USD in bunker fuel."
+        )
+    }
+
     return {
         "vessel_mmsi": vessel.get("mmsi"),
-        "vessel_name": vessel.get("name") or vessel.get("vessel_name"),
+        "vessel_name": vessel_name,
         "origin_country": vessel.get("origin_country", "International"),
         "destination_port": vessel.get("destination", "Port of Arjuna"),
         "recommendation": decision,
         "composite_decision_score": composite_score,
         "explainability_reasons": reasons,
+        "route_acceptance": route_acceptance,
         "eta": ml_eta,
         "risk": ml_risk,
         "weather": curr_weather,

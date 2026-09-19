@@ -60,6 +60,16 @@ def get_live_vessels():
     }
 
 
+# In-memory store for interactive operator route acceptance decisions
+ROUTE_DECISIONS_STORE: Dict[int, Dict[str, Any]] = {}
+
+
+class RouteDecisionRequest(BaseModel):
+    status: str  # "ACCEPTED", "DECLINED", or "PENDING"
+    operator_name: Optional[str] = "Port Controller"
+    notes: Optional[str] = None
+
+
 @router.get("/vessels/{mmsi}/decision")
 def get_vessel_decision(mmsi: int, congestion_index: float = Query(65.0, ge=0.0, le=100.0)):
     """
@@ -70,11 +80,62 @@ def get_vessel_decision(mmsi: int, congestion_index: float = Query(65.0, ge=0.0,
     - Alternate corridor route waypoints
     - Currency-normalized cost comparison & savings
     - Explainable decision reasons (PROCEED, HOLD, REROUTE)
+    - Interactive route acceptance breakdown (why accept vs why decline)
     """
     decision = get_vessel_decision_payload(mmsi, destination_port_congestion_index=congestion_index)
     if not decision:
         raise HTTPException(status_code=404, detail=f"Vessel with MMSI {mmsi} not found in active AIS stream")
+
+    # Attach recorded operator decision if available
+    user_decision = ROUTE_DECISIONS_STORE.get(mmsi, {
+        "status": "PENDING",
+        "operator_name": "Port Controller",
+        "timestamp_utc": "",
+    })
+    if "route_acceptance" in decision:
+        decision["route_acceptance"]["user_decision"] = user_decision
+
     return decision
+
+
+@router.post("/vessels/{mmsi}/route-decision")
+def save_vessel_route_decision(mmsi: int, req: RouteDecisionRequest):
+    """
+    Records operator's choice to Accept or Decline the alternate deepwater route.
+    """
+    import datetime
+    now_iso = datetime.datetime.utcnow().isoformat() + "Z"
+    status_clean = req.status.upper().strip()
+    if status_clean not in ["ACCEPTED", "DECLINED", "PENDING"]:
+        raise HTTPException(status_code=400, detail="Status must be ACCEPTED, DECLINED, or PENDING")
+
+    entry = {
+        "mmsi": mmsi,
+        "status": status_clean,
+        "operator_name": req.operator_name or "Port Controller",
+        "notes": req.notes,
+        "timestamp_utc": now_iso,
+    }
+    ROUTE_DECISIONS_STORE[mmsi] = entry
+    return {
+        "message": f"Route decision for vessel MMSI {mmsi} recorded as {status_clean}",
+        "decision": entry,
+    }
+
+
+@router.get("/vessels/{mmsi}/route-decision")
+def get_vessel_route_decision(mmsi: int):
+    """
+    Retrieves the current operator route decision for a specific vessel.
+    """
+    entry = ROUTE_DECISIONS_STORE.get(mmsi, {
+        "mmsi": mmsi,
+        "status": "PENDING",
+        "operator_name": "Port Controller",
+        "notes": None,
+        "timestamp_utc": "",
+    })
+    return entry
 
 
 @router.get("/weather/route")

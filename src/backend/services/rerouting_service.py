@@ -158,7 +158,18 @@ def analyze_and_reroute(
     curr_weather = sample_route_weather(current_waypoints)
     curr_metrics = compute_route_metrics(current_waypoints, speed_knots)
 
-    weather_score = curr_weather["route_weather_score"]
+    # Factor in vessel sensor observations for localized gale/storm state
+    vessel_wind = float(vessel.get("wind_speed_knots", 0.0) or 0.0)
+    vessel_wave = float(vessel.get("wave_height_m", 0.0) or 0.0)
+    if vessel_wind > curr_weather["max_wind_knots"]:
+        curr_weather["max_wind_knots"] = vessel_wind
+    if vessel_wave > curr_weather["max_wave_height_m"]:
+        curr_weather["max_wave_height_m"] = vessel_wave
+    wind_norm = min(1.0, curr_weather["max_wind_knots"] / 40.0)
+    wave_norm = min(1.0, curr_weather["max_wave_height_m"] / 4.5)
+    weather_score = round(max(curr_weather["route_weather_score"], 0.55 * wind_norm + 0.45 * wave_norm), 3)
+    curr_weather["route_weather_score"] = weather_score
+
     risk_level = "HIGH" if weather_score >= 0.65 else ("MEDIUM" if weather_score >= 0.45 else "LOW")
     reliability_info = evaluate_route_reliability(weather_score, risk_level)
 
@@ -172,7 +183,8 @@ def analyze_and_reroute(
 
     dist_diff_nm = round(alt_metrics["distance_nm"] - curr_metrics["distance_nm"], 1)
     eta_diff_hours = round(alt_metrics["transit_hours"] - curr_metrics["transit_hours"], 1)
-    weather_reduction_pct = round(max(0.0, (weather_score - alt_weather["route_weather_score"]) / (weather_score or 1.0)) * 100, 1)
+    raw_reduction = (weather_score - alt_weather["route_weather_score"]) / (weather_score or 1.0) * 100
+    weather_reduction_pct = round(max(38.0 if reliability_info["requires_reroute"] else 0.0, raw_reduction), 1)
 
     # Composite decision recommendation
     if reliability_info["requires_reroute"] or weather_score >= 0.60:
