@@ -228,42 +228,50 @@ export default function DashboardPage() {
     <AppShell crumb="Overview & CRM">
       <div className="space-y-6 max-w-[1680px] mx-auto select-none">
         
-        {/* 1. Welcome Banner Card (Strictly matching MaterialM Screenshots 3 & 5) */}
-        <div className="bg-gradient-to-r from-[#0085db] via-[#0094f0] to-[#00A1FF] rounded-2xl p-6 sm:p-7 text-white shadow-card relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+        {/* 1. Welcome Banner Card */}
+        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6 border border-white/20">
+          {/* Ambient Glow Blob */}
+          <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-cyan-400/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -left-10 -top-10 w-64 h-64 bg-fuchsia-500/20 rounded-full blur-3xl pointer-events-none" />
+
           <div className="relative z-10 max-w-xl">
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-1.5 leading-tight">
-              Welcome {activeRole?.label || 'Jonathan Deo'}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-xs font-bold mb-3 shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Live Terminal Telemetry · Port of Arjuna Pier 400</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight mb-2 leading-tight">
+              Welcome, {activeRole?.label || 'Duty Supervisor'}
             </h2>
-            <p className="text-white/85 text-xs sm:text-sm font-medium mb-5">
-              Check all the statistics · AI-grounded berth optimization and 72h continuous harbor telemetry.
+            <p className="text-white/90 text-xs sm:text-sm font-medium mb-5 max-w-lg leading-relaxed">
+              AI-grounded berth optimization, crane moves dispatch, and continuous 72h rolling horizon telemetry.
             </p>
 
             <div className="flex flex-wrap items-center gap-3">
-              <div className="px-4 py-2 rounded-xl bg-white/15 backdrop-blur-md border border-white/20">
+              <div className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/20 backdrop-blur-md border border-white/25 shadow-sm transition-all">
                 <span className="text-lg sm:text-xl font-black block leading-none">15</span>
-                <span className="text-[11px] text-white/80 font-medium">AIS Vessels</span>
+                <span className="text-[11px] text-white/80 font-semibold">AIS Vessels</span>
               </div>
-              <div className="px-4 py-2 rounded-xl bg-white/15 backdrop-blur-md border border-white/20">
-                <span className="text-lg sm:text-xl font-black block leading-none">98.4%</span>
-                <span className="text-[11px] text-white/80 font-medium">Berth SLA</span>
+              <div className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/20 backdrop-blur-md border border-white/25 shadow-sm transition-all">
+                <span className="text-lg sm:text-xl font-black block leading-none text-emerald-300">98.4%</span>
+                <span className="text-[11px] text-white/80 font-semibold">Berth SLA</span>
               </div>
-              <div className="px-4 py-2 rounded-xl bg-white/15 backdrop-blur-md border border-white/20">
-                <span className="text-lg sm:text-xl font-black block leading-none">$0.00</span>
-                <span className="text-[11px] text-white/80 font-medium">Demurrage</span>
+              <div className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/20 backdrop-blur-md border border-white/25 shadow-sm transition-all">
+                <span className="text-lg sm:text-xl font-black block leading-none text-cyan-300">$0.00</span>
+                <span className="text-[11px] text-white/80 font-semibold">Demurrage Guard</span>
               </div>
             </div>
           </div>
 
-          {/* Right 3D Isometric Art Decoration (matching megaphone character / 3D cargo scene) */}
+          {/* Right 3D Isometric Art Decoration */}
           <div className="relative z-10 shrink-0 flex items-center justify-center">
-            <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-full bg-white/10 backdrop-blur-md border border-white/25 flex items-center justify-center p-4 relative shadow-lg">
+            <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/25 flex items-center justify-center p-4 relative shadow-2xl hover:scale-105 transition-transform duration-300">
               <svg viewBox="0 0 160 160" className="w-full h-full">
                 {/* Isometric Cargo Container Ship Art */}
-                <ellipse cx="80" cy="120" rx="60" ry="18" fill="rgba(0,0,0,0.15)" />
+                <ellipse cx="80" cy="120" rx="60" ry="18" fill="rgba(0,0,0,0.25)" />
                 <path d="M25 95 L80 120 L135 95 L110 80 L50 80 Z" fill="#FFFFFF" />
                 <path d="M25 95 L80 120 L80 102 L25 80 Z" fill="#E2E8F0" />
                 <path d="M80 120 L135 95 L135 80 L80 102 Z" fill="#CBD5E1" />
-                {/* Containers */}
+                {/* Containers with vibrant colors */}
                 <rect x="52" y="60" width="18" height="18" rx="2" fill="#FFAE1F" />
                 <rect x="74" y="60" width="18" height="18" rx="2" fill="#13DEB9" />
                 <rect x="63" y="40" width="18" height="18" rx="2" fill="#FA896B" />
@@ -281,7 +289,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
           
           {/* Overall Throughput Dual-Wave Card (col-span-8 matching Screenshot 4) */}
-          <div className="lg:col-span-8 bg-surface rounded-2xl p-6 border border-line shadow-card flex flex-col justify-between relative overflow-hidden">
+          <div className="lg:col-span-8 bg-surface rounded-2xl p-6 border border-line shadow-card flex flex-col justify-between relative overflow-hidden hover:shadow-lg hover:border-cyan-400/40 transition-all duration-300 before:absolute before:top-0 before:left-0 before:right-0 before:h-1 before:bg-gradient-to-r before:from-cyan-400 before:via-blue-500 before:to-indigo-500">
             <div>
               {/* Header */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
@@ -420,7 +428,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Return On Turnaround Bar Chart (col-span-4 matching Screenshot 4) */}
-          <div className="lg:col-span-4 bg-surface rounded-2xl p-6 border border-line shadow-card flex flex-col justify-between">
+          <div className="lg:col-span-4 bg-surface rounded-2xl p-6 border border-line shadow-card flex flex-col justify-between relative overflow-hidden hover:shadow-lg hover:border-indigo-400/40 transition-all duration-300 before:absolute before:top-0 before:left-0 before:right-0 before:h-1 before:bg-gradient-to-r before:from-indigo-400 before:to-purple-500">
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-base font-bold text-ink tracking-tight">Return On Turnaround</h3>
@@ -493,7 +501,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
           
           {/* Quayside Berth Allocation Semicircular Gauge (col-span-4 Strictly matching Screenshot 3) */}
-          <div className="lg:col-span-4 bg-surface rounded-2xl p-6 border border-line shadow-card flex flex-col justify-between">
+          <div className="lg:col-span-4 bg-surface rounded-2xl p-6 border border-line shadow-card flex flex-col justify-between relative overflow-hidden hover:shadow-lg hover:border-purple-400/40 transition-all duration-300 before:absolute before:top-0 before:left-0 before:right-0 before:h-1 before:bg-gradient-to-r before:from-purple-400 before:via-pink-500 before:to-amber-400">
             <div>
               {/* Header with Title and Three-Dot Menu */}
               <div className="flex items-center justify-between mb-2">
@@ -578,7 +586,7 @@ export default function DashboardPage() {
 
                 {/* Center Value & Optimal SLA Badge Matching Screenshot 3 */}
                 <div className="absolute top-14 text-center select-none pointer-events-none">
-                  <span className="text-3xl font-extrabold text-ink block leading-tight tracking-tight">
+                  <span className="text-3xl font-black text-ink block leading-tight tracking-tight">
                     8,364
                   </span>
                   <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#00A86B] dark:text-emerald-400 bg-[#E8F8F0] dark:bg-emerald-950/60 px-3 py-1 rounded-full mt-1.5 shadow-xs">
@@ -620,10 +628,10 @@ export default function DashboardPage() {
           <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-5">
             
             {/* Card 1: Gang Assignments */}
-            <div className="bg-surface rounded-2xl p-5 border border-line shadow-card flex flex-col justify-between">
+            <div className="bg-surface rounded-2xl p-5 border border-line shadow-card flex flex-col justify-between relative overflow-hidden hover:-translate-y-1 hover:shadow-md hover:border-rose-400/40 transition-all duration-300 before:absolute before:top-0 before:left-0 before:right-0 before:h-1 before:bg-gradient-to-r before:from-rose-500 before:to-pink-500">
               <div>
                 <div className="flex items-center justify-between">
-                  <div className="w-11 h-11 rounded-2xl bg-rose-500 text-white flex items-center justify-center shadow-xs">
+                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white flex items-center justify-center shadow-[0_0_15px_rgba(244,63,94,0.3)]">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                       <circle cx="9" cy="7" r="4" />
@@ -646,10 +654,10 @@ export default function DashboardPage() {
             </div>
 
             {/* Card 2: Tariff Earnings */}
-            <div className="bg-surface rounded-2xl p-5 border border-line shadow-card flex flex-col justify-between">
+            <div className="bg-surface rounded-2xl p-5 border border-line shadow-card flex flex-col justify-between relative overflow-hidden hover:-translate-y-1 hover:shadow-md hover:border-purple-400/40 transition-all duration-300 before:absolute before:top-0 before:left-0 before:right-0 before:h-1 before:bg-gradient-to-r before:from-indigo-500 before:to-purple-500">
               <div>
                 <div className="flex items-center justify-between">
-                  <div className="w-11 h-11 rounded-2xl bg-[#7352FF] text-white flex items-center justify-center shadow-xs">
+                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-[0_0_15px_rgba(99,102,241,0.3)]">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="2" y="5" width="20" height="14" rx="2" />
                       <circle cx="12" cy="12" r="3" />
@@ -670,10 +678,10 @@ export default function DashboardPage() {
             </div>
 
             {/* Card 3: Drayage Flow */}
-            <div className="bg-surface rounded-2xl p-5 border border-line shadow-card flex flex-col justify-between">
+            <div className="bg-surface rounded-2xl p-5 border border-line shadow-card flex flex-col justify-between relative overflow-hidden hover:-translate-y-1 hover:shadow-md hover:border-teal-400/40 transition-all duration-300 before:absolute before:top-0 before:left-0 before:right-0 before:h-1 before:bg-gradient-to-r before:from-teal-400 before:to-emerald-500">
               <div>
                 <div className="flex items-center justify-between">
-                  <div className="w-11 h-11 rounded-2xl bg-[#13DEB9] text-white flex items-center justify-center shadow-xs">
+                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-teal-500 to-emerald-500 text-white flex items-center justify-center shadow-[0_0_15px_rgba(20,184,166,0.3)]">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10" />
                       <polyline points="12 6 12 12 16 14" />
@@ -698,7 +706,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
           
           {/* Active Fleet Table (col-span-8 matching Screenshot 4 Popular Products) */}
-          <div className="lg:col-span-8 bg-surface rounded-2xl p-6 border border-line shadow-card">
+          <div className="lg:col-span-8 bg-surface rounded-2xl p-6 border border-line shadow-card relative overflow-hidden hover:shadow-lg hover:border-cyan-400/40 transition-all duration-300 before:absolute before:top-0 before:left-0 before:right-0 before:h-1 before:bg-gradient-to-r before:from-cyan-400 before:via-blue-500 before:to-indigo-500">
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h3 className="text-base font-bold text-ink tracking-tight">Active Fleet &amp; Lineup Calls</h3>
@@ -747,10 +755,10 @@ export default function DashboardPage() {
                     <span
                       className={`text-xs font-bold px-3 py-1 rounded-full ${
                         v.statusType === 'confirmed'
-                          ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400'
+                          ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
                           : v.statusType === 'delayed'
-                          ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400'
-                          : 'bg-sky-50 text-[#0085db] dark:bg-sky-950/40 dark:text-sky-300'
+                          ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200 dark:border-rose-800'
+                          : 'bg-sky-50 text-[#0085db] dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200 dark:border-sky-800'
                       }`}
                     >
                       {v.status}
@@ -769,7 +777,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Zone Telemetry Reports (col-span-4 matching Screenshot 4 Earning Reports) */}
-          <div className="lg:col-span-4 bg-surface rounded-2xl p-6 border border-line shadow-card flex flex-col justify-between">
+          <div className="lg:col-span-4 bg-surface rounded-2xl p-6 border border-line shadow-card flex flex-col justify-between relative overflow-hidden hover:shadow-lg hover:border-emerald-400/40 transition-all duration-300 before:absolute before:top-0 before:left-0 before:right-0 before:h-1 before:bg-gradient-to-r before:from-emerald-400 before:to-teal-500">
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div>

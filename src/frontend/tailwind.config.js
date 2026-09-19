@@ -15,9 +15,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        canvas: '#F4F6F9',
-        surface: '#FFFFFF',
-        cardBorder: '#E5EAEE',
+        canvas: 'var(--bg-app)',
+        surface: 'var(--surface-card)',
+        cardBorder: 'var(--border-subtle)',
         materialm: {
           brand: '#0085db',
           brandHover: '#0074c2',

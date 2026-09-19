@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import LandingPage from '../pages/LandingPage.jsx'
 import LoginPage from '../pages/LoginPage.jsx'
@@ -47,6 +47,10 @@ export default function AppRoutes() {
             <LandingPage />
           </PageWrapper>
         }
+      />
+      <Route
+        path="/overview"
+        element={<Navigate to="/dashboard" replace />}
       />
       <Route
         path="/login"
