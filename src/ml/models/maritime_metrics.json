@@ -1,0 +1,18 @@
+{
+  "eta": {
+    "mae_hours": 2.27,
+    "mae_minutes": 136.4,
+    "rmse_hours": 3.31,
+    "r2_score": 0.487
+  },
+  "risk": {
+    "weighted_f1": 0.931,
+    "classes": [
+      "HIGH",
+      "LOW",
+      "MEDIUM"
+    ]
+  },
+  "trained_at": "2026-09-19T06:52:31.113715+00:00",
+  "training_samples": 48
+}

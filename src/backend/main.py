@@ -10,12 +10,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 try:
-    from .routers import predictions, optimisation, planning, copilot, supabase_router
+    from .routers import predictions, optimisation, planning, copilot, supabase_router, maritime_router
     from .db.database import engine, Base
     from .db.seed import seed_database
     from .db.supabase_client import check_supabase_connection
 except (ImportError, ValueError):
-    from routers import predictions, optimisation, planning, copilot, supabase_router
+    from routers import predictions, optimisation, planning, copilot, supabase_router, maritime_router
     from db.database import engine, Base
     from db.seed import seed_database
     from db.supabase_client import check_supabase_connection
@@ -57,6 +57,7 @@ app.include_router(optimisation.router)
 app.include_router(planning.router)
 app.include_router(copilot.router)
 app.include_router(supabase_router.router)
+app.include_router(maritime_router.router)
 
 
 @app.get("/")

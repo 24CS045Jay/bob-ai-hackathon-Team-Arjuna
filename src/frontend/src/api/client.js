@@ -160,3 +160,34 @@ export async function fetch72hPlan(baseTimeIso = null) {
   })
   return data
 }
+
+// ─── Maritime AI & Dynamic Rerouting Endpoints ──────────────────────────────
+
+export async function fetchLiveVessels() {
+  const data = await safeFetch('/api/vessels/live')
+  return data
+}
+
+export async function fetchVesselDecision(mmsi, congestionIndex = 65.0) {
+  const data = await safeFetch(`/api/vessels/${mmsi}/decision?congestion_index=${congestionIndex}`)
+  return data
+}
+
+export async function fetchRouteWeather(lats, lons) {
+  const data = await safeFetch(`/api/weather/route?lats=${lats}&lons=${lons}`)
+  return data
+}
+
+export async function fetchCurrencyRates() {
+  const data = await safeFetch('/api/currency/rates')
+  return data
+}
+
+export async function evaluateReroute(payload) {
+  const data = await safeFetch('/api/route/reroute', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+  return data
+}
+
