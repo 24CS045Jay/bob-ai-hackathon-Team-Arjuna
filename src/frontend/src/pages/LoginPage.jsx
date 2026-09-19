@@ -509,7 +509,8 @@ export default function LoginPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="operator@portflow.ai"
-                      className="w-full px-4 py-2.5 rounded-xl bg-white/8 border border-white/15 text-white text-xs sm:text-sm font-medium transition-all outline-none placeholder-white/25 focus:bg-white/12"
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-white/15 text-white text-xs sm:text-sm font-medium transition-all outline-none placeholder-white/40"
+                      style={{ colorScheme: 'dark' }}
                       onFocus={e => e.target.style.borderColor = currentMeta.accent}
                       onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.15)'}
                       required
@@ -533,7 +534,8 @@ export default function LoginPage() {
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl bg-white/8 border border-white/15 text-white text-xs sm:text-sm font-medium transition-all outline-none focus:bg-white/12"
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-white/15 text-white text-xs sm:text-sm font-medium transition-all outline-none"
+                      style={{ colorScheme: 'dark' }}
                       onFocus={e => e.target.style.borderColor = currentMeta.accent}
                       onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.15)'}
                       required
@@ -589,7 +591,8 @@ export default function LoginPage() {
                         value={signUpName}
                         onChange={(e) => setSignUpName(e.target.value)}
                         placeholder="e.g. Capt. Arjun Varma"
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-white/8 border border-white/15 text-white text-xs sm:text-sm font-medium transition-all outline-none placeholder-white/25 focus:bg-white/12"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-white/15 text-white text-xs sm:text-sm font-medium transition-all outline-none placeholder-white/40 focus:border-[#0085db]"
+                        style={{ colorScheme: 'dark' }}
                         required
                       />
                     </div>
@@ -603,7 +606,8 @@ export default function LoginPage() {
                         value={signUpEmail}
                         onChange={(e) => setSignUpEmail(e.target.value)}
                         placeholder="a.varma@portflow.ai"
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-white/8 border border-white/15 text-white text-xs sm:text-sm font-medium transition-all outline-none placeholder-white/25 focus:bg-white/12"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-white/15 text-white text-xs sm:text-sm font-medium transition-all outline-none placeholder-white/40 focus:border-[#0085db]"
+                        style={{ colorScheme: 'dark' }}
                         required
                       />
                     </div>
@@ -619,7 +623,8 @@ export default function LoginPage() {
                         value={signUpPassword}
                         onChange={(e) => setSignUpPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-white/8 border border-white/15 text-white text-xs sm:text-sm font-medium transition-all outline-none focus:bg-white/12"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-white/15 text-white text-xs sm:text-sm font-medium transition-all outline-none focus:border-[#0085db]"
+                        style={{ colorScheme: 'dark' }}
                         required
                       />
                     </div>
@@ -633,7 +638,8 @@ export default function LoginPage() {
                         value={signUpConfirmPassword}
                         onChange={(e) => setSignUpConfirmPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-white/8 border border-white/15 text-white text-xs sm:text-sm font-medium transition-all outline-none focus:bg-white/12"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-white/15 text-white text-xs sm:text-sm font-medium transition-all outline-none focus:border-[#0085db]"
+                        style={{ colorScheme: 'dark' }}
                         required
                       />
                     </div>

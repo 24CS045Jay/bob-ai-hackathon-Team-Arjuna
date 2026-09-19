@@ -13,31 +13,21 @@ export default function OceanAnimation() {
 
   return (
     <div className="absolute inset-0 z-[1] overflow-hidden pointer-events-none select-none">
-      {/* High-res Hero Ocean & Vessel Background Image */}
-      <div
-        className="absolute inset-0 w-full h-full bg-cover bg-center transition-opacity duration-700 pointer-events-none"
-        style={{
-          backgroundImage: 'url(/assets/video/hero-ocean-poster.jpg)',
-          opacity: 0.95
-        }}
-        aria-hidden="true"
-      />
-
-      {/* Optional video layer if loaded */}
+      {/* Generated cinematic ship loop. The poster is used only while the video loads. */}
       <video
         autoPlay
         muted
         loop
         playsInline
-        preload="metadata"
+        preload="auto"
         poster="/assets/video/hero-ocean-poster.jpg"
         onError={() => setVideoError(true)}
         className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000 motion-reduce:hidden ${
-          videoError ? 'opacity-0' : 'opacity-70'
+          videoError ? 'opacity-0' : 'opacity-100'
         }`}
       >
-        <source src="/assets/video/hero-ocean-aerial.mp4" type="video/mp4" />
-        <source src="/assets/video/hero-container-port.webm" type="video/webm" />
+        <source src="/assets/video/generate_in_video_in_that_one.mp4" type="video/mp4" />
+        <source src="/assets/video/remove_the_task_bar_from_bott.mp4" type="video/mp4" />
       </video>
 
       {/* Oceanic Scrim & Color Grading Overlay:
