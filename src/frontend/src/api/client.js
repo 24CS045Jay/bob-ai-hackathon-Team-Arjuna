@@ -4,11 +4,14 @@
  * Graceful fallback to cached state if backend is offline.
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+const API_BASE = import.meta.env.VITE_API_BASE_URL !== undefined
+  ? import.meta.env.VITE_API_BASE_URL
+  : (typeof window !== 'undefined' && window.location.port === '5173' ? '' : 'http://127.0.0.1:8000')
 
 async function safeFetch(endpoint, options = {}) {
+  const primaryUrl = API_BASE ? `${API_BASE}${endpoint}` : endpoint
   try {
-    const res = await fetch(`${API_BASE}${endpoint}`, {
+    const res = await fetch(primaryUrl, {
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
@@ -20,13 +23,37 @@ async function safeFetch(endpoint, options = {}) {
     }
     return await res.json()
   } catch (err) {
+    // If relative proxy failed or returned error, try direct backend port 8000 as secondary fallback
+    if (!API_BASE && typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      try {
+        const directRes = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            ...options.headers,
+          },
+          ...options,
+        })
+        if (directRes.ok) {
+          return await directRes.json()
+        }
+      } catch (_) {}
+    }
     console.warn(`[PortFlow API] ${endpoint} unreachable, using fallback:`, err.message)
     return null
   }
 }
 
 export async function fetchHealth() {
-  return await safeFetch('/health')
+  const startTime = Date.now()
+  const data = await safeFetch('/health')
+  if (data) {
+    return {
+      ...data,
+      latencyMs: Date.now() - startTime,
+      online: true,
+    }
+  }
+  return { online: false, latencyMs: 0 }
 }
 
 export async function fetchCopilotStatus() {
