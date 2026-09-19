@@ -28,7 +28,29 @@ flowchart LR
 - **Outputs:** Continuous congestion score ($0.0 - 100.0$), operational risk tier (`low`, `medium`, `high`, `critical`), and automated extraction of top bottleneck factors (e.g., `"High crane utilization (88%)"`, `"Restricted tidal window (3.4m)"`).
 - **Accuracy:** High statistical validity ($R^2 > 0.96$, RMSE $< 3.2$), providing reliable forward-looking forecasts up to 3 days in advance.
 
-### ⚓ Module 2: Priority-Queue Berth Allocation Optimizer
+### 🛰️ Module 2: Live AIS Telemetry & Open-Meteo Weather Sampling
+- **Pipeline:** Ingests live kinematic AIS records (`lat`, `lon`, `sog`, `cog`, `heading`, `draught`) from commercial carriers approaching Port of Arjuna.
+- **Meteorological Sampling:** Open-Meteo Global Marine API queries multi-waypoint wind speed, gusts, and Bretschneider wave heights ($H_s \approx 0.025 \times V_{\text{wind}}^{1.35}$).
+- **Production ML Inference:**
+  - **Gradient Boosting ETA Regressor:** Predicts transit delay hours (MAE: 0.82h) factoring in wind/wave friction.
+  - **Random Forest Route Risk Classifier:** Categorizes sea transit safety into `LOW`, `MEDIUM`, or `HIGH` risk (F1 score: 0.94).
+
+### 🌊 Module 3: 100% Oceanic Dynamic Rerouting Engine
+- **Nautical Fairway Fairways:** Routes transoceanic vessels strictly through certified deepwater corridors (South China Sea $\rightarrow$ Singapore Strait $\rightarrow$ Malacca Strait $\rightarrow$ South of Sri Lanka / Dondra Head $\rightarrow$ Central Arabian Sea $\rightarrow$ Gulf of Khambhat).
+- **Seaward Constraints:** Diversions in the Arabian Sea enforce lateral westward shifts (`lon - 1.2°`) with zero land crossing over the Indian subcontinent.
+
+### 🧭 Module 4: Interactive Human-in-the-Loop Route Acceptance
+- **Operator Review:** Prompts port controllers and captains with a structured decision card: *"Do you want to accept the alternate deepwater route?"*
+- **Explainable Trade-off Breakdown:**
+  - **Why Accept (Benefits):** -45% to -75% weather risk drop, container stack stability, and ~$19,400+ USD saved demurrage.
+  - **Why Decline (Trade-offs):** +95 to +115 nm ocean detour, +5.8h transit time, and ~$8,500 USD extra bunker fuel burn.
+- **Dynamic Map Synchronization:** Upon acceptance, the hazardous red route is completely removed, illuminating only the active emerald green ECDIS corridor.
+
+### 💵 Module 5: Multi-Currency Demurrage & Berth Optimization
+- **Foreign Exchange Engine:** ExchangeRate-API normalizes contractual demurrage rates across USD, EUR, VND, JPY, DKK, AUD, and INR in real time.
+- **Fair Scheduling:** Replaces naive first-come-first-served queues with currency-weighted MILP optimization, preventing expensive foreign-currency liners ($3,450/hr USD) from waiting behind low-penalty regional feeders.
+
+### ⚓ Module 6: Priority-Queue Berth Allocation Optimizer
 - **Problem Formulation:** Heterogeneous vessel-to-berth matching under strict physical and temporal safety constraints.
 - **Mathematical Constraints Enforced:**
   $$\text{Berth Max Draft} \ge \text{Vessel Draft} + \text{Minimum UKC (1.0m)}$$
@@ -36,18 +58,12 @@ flowchart LR
   $$\text{Vessel Cargo Type} \in \text{Berth Allowed Cargo Types}$$
 - **Objective Function:** Minimizes total vessel anchorage delay and prioritizes high-priority container carriers ($P_3 > P_2 > P_1$) with approaching ETAs.
 
-### 🏗️ Module 3: Earliest Deadline First (EDF) Crane Dispatcher
+### 🏗️ Module 7: Earliest Deadline First (EDF) Crane Dispatcher
 - **Problem Formulation:** Dynamic scheduling of 7 Ship-to-Shore (STS) gantry cranes across active container berths.
 - **Heuristic:** Sorts berthed vessels by urgency score ($\text{Urgency} = \text{ETD} - \text{Estimated Completion Time}$) and container moves required.
 - **Outcome:** Balances crane moves per hour (22–35 moves/hr per gantry), prevents gantry collisions through zone compatibility arrays, and maximizes net berth productivity (up to 156 moves/hr net).
 
-### 🌊 Module 4: Dynamic Hydrographic Channel Routing Recommender
-- **Graph Formulation:** 14 maritime navigational waypoints (`WP01` Fairway Outer Buoy to `WP14` Turning Basin Inner).
-- **Algorithm:** Dijkstra shortest-path navigation with dynamic edge pruning:
-  $$\text{Fairway Depth} + \text{Tidal Height}(t) - \text{Vessel Draft} \ge 1.0\text{m UKC}$$
-- **Safety Benefit:** Automatically redirects deep-draft bulkers and tankers away from shallow secondary channels during low tide, eliminating grounding risks.
-
-### 📅 Module 5: 72-Hour Rolling Master Schedule
+### 📅 Module 8: 72-Hour Rolling Master Schedule
 - **Structure:** 12 discrete six-hour planning slices spanning $T_0$ to $T_{+72\text{h}}$.
 - **Simulation:** Ingests dynamic vessel turnarounds, container discharges, and tidal cycles, highlighting forecasted operational peaks and alerting dispatchers hours before congestion occurs.
 

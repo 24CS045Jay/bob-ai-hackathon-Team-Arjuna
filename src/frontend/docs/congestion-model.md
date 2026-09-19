@@ -67,3 +67,31 @@ When $S_{\text{zone}} \ge 50$, the `routingEngine` scans real system candidates:
 1. **Quayside:** Checks for idle berths ($N_{\text{vessels}} = 0$) where berth depth $D \ge \text{draft}_{\text{vessel}} + 1.0\text{m}$. Matches MV Coral Voyager (11.4m draft) to Berth 6 (14.5m depth).
 2. **Gates:** Identifies adjacent portals with $\ge 2$ spare online lanes and queue $< 15$ trucks. Reroutes 50% approaching drayage from Gate 3 to Gate 2.
 3. **Anchorage Holding:** Holds deep-draft vessels until high tide crest (+2.4m datum) to ensure $\ge 1.8\text{m}$ under-keel clearance.
+
+---
+
+## 3. Maritime Voyage Risk & 100% Oceanic Dynamic Rerouting Model
+
+### 3.1 Oceanic Weather Hazard Risk Index ($R_{\text{route}}$)
+
+The route safety index evaluates wave front heights, wind speeds, and current vectors:
+
+$$R_{\text{route}} = \min\left(100, \, \alpha \cdot H_s^2 + \beta \cdot U_{\text{wind}} + \gamma \cdot V_{\text{current}} \cdot \cos(\theta_{\text{rel}})\right)$$
+
+Where:
+- $H_s$: Significant wave height in meters ($\alpha = 3.2$). Wave energy scales quadratically with height.
+- $U_{\text{wind}}$: Wind velocity in knots ($\beta = 0.85$).
+- $V_{\text{current}} \cdot \cos(\theta_{\text{rel}})$: Longitudinal opposing marine current component ($\gamma = 4.5$).
+- **Thresholds:**
+  - $R_{\text{route}} < 30$: **LOW** (Safe to navigate standard fairway).
+  - $30 \le R_{\text{route}} < 65$: **MODERATE** (Precautionary speed reduction advised).
+  - $R_{\text{route}} \ge 65$: **SEVERE** (Automatic Oceanic Bypass Rerouting triggered).
+
+### 3.2 100% Oceanic Deepwater Fairway Synthesis (Zero Land Traversal)
+
+To guarantee that synthesized bypass routes never traverse landmasses or shallow shoals:
+1. **Seaward Coordinate Clamping:** Waypoints are bounded by minimum ocean bathymetric depth:
+   $$\text{Bathymetry}(w_i) \ge \text{Draught}_{\text{vessel}} + 5.0\text{m}$$
+2. **Storm Evasion Offset:** Calculates the normal vector $\hat{n}_{\perp}$ perpendicular to the voyage transit vector, displacing waypoints seaward into deep international waters by offset $\Delta d \ge R_{\text{storm}} + 15\text{ NM}$.
+3. **Visual Acceptance Isolation:** Upon operator confirmation (`ACCEPTED`), the UI strictly suppresses the hazardous red trajectory, rendering solely the safe green corridor to prevent bridge crew confusion.
+

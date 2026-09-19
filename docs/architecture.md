@@ -10,11 +10,14 @@ flowchart TB
         UI["React 18 + Vite Operations Dashboard"]
         COPILOT_UI["AI Copilot Interactive Drawer"]
         TWIN["HTML5 Canvas Digital Twin Port Map"]
+        WORLD_MAP["World Map Maritime AIS & Weather Operations"]
+        ROUTE_MODAL["Interactive Route Acceptance Modal (Why Accept / Decline)"]
         GANTT["72h Horizon Gantt & Schedule View"]
     end
 
     subgraph APILayer ["FastAPI Orchestration Backend (:8000)"]
         MAIN["main.py (CORS, Lifespan, /health)"]
+        R_MARITIME["/api/vessels (AIS Telemetry, Weather, Reroute, Decisions)"]
         R_PRED["/api/predictions (Congestion & Hotspots)"]
         R_OPT["/api/optimisation (Berths, Cranes, Routes)"]
         R_PLAN["/api/planning (72-Hour Horizon Matrix)"]
@@ -22,8 +25,18 @@ flowchart TB
         R_SUPA["/api/supabase (Status, Sync, Cloud CRUD)"]
     end
 
+    subgraph MaritimeAIEngine ["Maritime AI & Weather Intelligence"]
+        AIS_SRV["ais_service.py (Live AIS Telemetry & Seaward Clamping)"]
+        WX_SRV["weather_service.py (Open-Meteo Marine Weather API)"]
+        REROUTE_SRV["rerouting_service.py (100% Oceanic Safe Fairways)"]
+        RECOM_SRV["recommendation_service.py (Explainable Acceptance Trade-offs)"]
+        COST_SRV["cost_service.py (Multi-Currency Demurrage Valuation)"]
+    end
+
     subgraph MLLayer ["Machine Learning Pipeline"]
         RF_MODEL["RandomForestRegressor (congestion_model.pkl)"]
+        ETA_GB["GradientBoostingRegressor (eta_model.pkl)"]
+        RISK_RF["RandomForestClassifier (risk_model.pkl)"]
         FEAT_PIPE["PortFeaturePipeline (StandardScaler + Encoders)"]
         SYN_DATA["data_generator.py (2,400 Historical Records)"]
     end
@@ -35,26 +48,42 @@ flowchart TB
         PLAN_72H["Multi-Horizon 72h Planner (12 Slices)"]
     end
 
-    subgraph FoundationModels ["Grounded AI Foundation Layer"]
+    subgraph ExternalAPIs ["Live External Feeds & Foundation Models"]
+        OPEN_METEO["Open-Meteo Marine API (Waves, Winds, Currents)"]
+        EXCHANGE_API["ExchangeRate-API (Multi-Currency Demurrage)"]
         WATSONX["IBM watsonx.ai (Granite-3-8B Instruct)"]
         GROQ_LLM["Groq Cloud (Llama 3.3 70B Versatile)"]
         GEMINI_LLM["Google Gemini 1.5/2.0 Flash"]
-        DETERMINISTIC_AI["PortFlow Deterministic Grounded Engine (Offline)"]
+        DETERMINISTIC_AI["PortFlow Grounded Engine (Offline)"]
     end
 
     subgraph DataStorage ["Data & Telemetry Layer"]
         SUPABASE[(Supabase Cloud PostgreSQL)]
         SQLITE_DB[(SQLite Local Fallback: portflow.db)]
-        CONTRACT["data_contract.md (Port of Arjuna Ground Truth)"]
+        CONTRACT["data_contract.md (Canonical Data Ground Truth)"]
     end
 
     UI <--> MAIN
     COPILOT_UI <--> R_COP
+    WORLD_MAP <--> R_MARITIME
+    ROUTE_MODAL <--> R_MARITIME
+    MAIN --> R_MARITIME
     MAIN --> R_PRED
     MAIN --> R_OPT
     MAIN --> R_PLAN
     MAIN --> R_COP
     MAIN --> R_SUPA
+
+    R_MARITIME --> AIS_SRV
+    R_MARITIME --> WX_SRV
+    R_MARITIME --> REROUTE_SRV
+    R_MARITIME --> RECOM_SRV
+    R_MARITIME --> COST_SRV
+
+    WX_SRV <--> OPEN_METEO
+    COST_SRV <--> EXCHANGE_API
+    REROUTE_SRV --> RISK_RF
+    REROUTE_SRV --> ETA_GB
 
     R_PRED --> RF_MODEL
     RF_MODEL <--> FEAT_PIPE
@@ -83,7 +112,11 @@ flowchart TB
 | Component | Technology | Primary Responsibility |
 |---|---|---|
 | **Digital Twin Web UI** | React 18, Vite, Vanilla CSS, Tailwind, Framer Motion, Recharts | Real-time situational port map, Gantt berth allocation timeline, multi-zone congestion heatmaps, role-based dispatcher switching, and AI Copilot slide-over drawer. |
-| **Orchestration API** | Python 3.11+, FastAPI, Uvicorn, Pydantic v2 | High-concurrency asynchronous REST endpoints serving predictions, discrete optimizations, 72-hour planning, and Copilot chats. |
+| **Maritime World Map UI** | React 18, Mapbox GL / Leaflet, Framer Motion | High-definition oceanic navigation canvas displaying live AIS vessel transponders, real-time severe storm polygons, dynamic green oceanic bypass corridors, and interactive route acceptance modals with full why accept/decline trade-offs. |
+| **Orchestration API** | Python 3.11+, FastAPI, Uvicorn, Pydantic v2 | High-concurrency asynchronous REST endpoints serving predictions, discrete optimizations, 72-hour planning, Copilot chats, and maritime telemetry. |
+| **Maritime AI Subsystem** | Python, NumPy, Haversine, Open-Meteo Client | Live AIS telemetry generation, real-time marine weather ingestion, 100% oceanic deepwater fairway computation (zero land traversal), and operator route decision persistence. |
+| **Voyage ML Regressors & Classifiers** | Scikit-learn, Gradient Boosting, Random Forest | Multi-factor models predicting voyage ETA delta under storm resistance and classifying route safety hazard levels ($0-100\%$). |
+| **Multi-Currency Demurrage Engine** | Python, ExchangeRate-API, BIMCO formulas | Calculates financial demurrage exposure and fuel expenditure in 8 global currencies (USD, EUR, GBP, JPY, SGD, INR, CNY, AED) with live rates. |
 | **Congestion Predictor (ML)** | Scikit-learn, NumPy, Pandas, Joblib | Random Forest regressor with 100 decision trees predicting multi-zone congestion indices ($R^2 > 0.96$, RMSE $< 3.2$) across zones A–F in 6-hour intervals. |
 | **Berth Allocation Solver** | Python (`heapq`, priority queues) | Matches incoming container vessels to 12 berths while strictly checking draft + 1.0m UKC safety clearance, LOA limits, and cargo compatibility. |
 | **Crane Dispatch Solver** | Python (Earliest Deadline First) | Allocates 7 STS container gantry cranes to maximize moves per hour and eliminate demurrage risks on approaching departure windows. |
@@ -107,7 +140,13 @@ flowchart TB
    - **Berth Allocator:** Evaluates vessel priorities, LOA constraints, and under-keel clearance ($Draft + 1.0m \le Berth Max Draft$), assigning optimal berths and queuing unassigned vessels.
    - **Crane Allocator:** Distributes 7 STS cranes to berthed vessels using Earliest Deadline First (EDF) scheduling.
    - **Fairway Router:** Evaluates the 14-waypoint channel graph, routing ships through safe basinal fairways based on tidal clearance.
-5. **Grounded AI Copilot Interaction:**
+5. **Maritime AI Telemetry, Oceanic Routing & Operator Acceptance:**
+   - **Live AIS Telemetry Ingestion:** Streams real-time vessel position, SOG, COG, and UKC with seaward clamping ensuring vessels remain exclusively in deep navigable waters.
+   - **Marine Weather Sampling:** Ingests live wave heights, swell periods, wind speeds, and ocean surface currents from Open-Meteo Marine API.
+   - **Storm Bypass & 100% Oceanic Fairways:** When high wave heights or cyclone hazards intercept a voyage, `rerouting_service.py` synthesizes safe deepwater waypoints around the storm with zero land or shallow coastal traversal.
+   - **Explainable Trade-off Generation:** `recommendation_service.py` evaluates risk reductions, ETA delays, bunker consumption, and demurrage to generate an explicit "Why Accept" vs "Why Decline" dossier.
+   - **Operator Authorization & Persistence:** The dispatcher reviews the side-by-side trade-off modal on the World Map UI. Upon clicking "Accept Route", `POST /api/vessels/{mmsi}/route-decision` persists the decision, and the frontend instantly hides the hazardous red route, displaying solely the active green oceanic bypass corridor.
+6. **Grounded AI Copilot Interaction:**
    When an operator asks a question (e.g. *"Which berths are currently empty?"* or *"What is causing congestion in Zone B?"*):
    - The query passes through the domain guardrail filter.
    - Live numerical state is assembled into a structured context snapshot.
