@@ -80,6 +80,21 @@ CREATE TABLE IF NOT EXISTS public.optimization_logs (
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
 );
 
+-- 6. Create Users & Personnel Table
+CREATE TABLE IF NOT EXISTS public.users (
+    id VARCHAR(64) PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255),
+    name VARCHAR(128) NOT NULL,
+    title VARCHAR(128),
+    role_code VARCHAR(64) NOT NULL DEFAULT 'shift_supervisor',
+    department VARCHAR(128) DEFAULT 'Terminal Dispatch',
+    shift VARCHAR(64) DEFAULT '06:00 - 14:00 (Morning)',
+    avatar VARCHAR(8) DEFAULT 'OP',
+    last_login VARCHAR(64),
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
+);
+
 -- -----------------------------------------------------------------------------
 -- Indexes for Performance
 -- -----------------------------------------------------------------------------
@@ -88,6 +103,8 @@ CREATE INDEX IF NOT EXISTS idx_vessels_assigned_berth ON public.vessels(assigned
 CREATE INDEX IF NOT EXISTS idx_berths_zone ON public.berths(zone_id);
 CREATE INDEX IF NOT EXISTS idx_cranes_zone ON public.cranes(zone_id);
 CREATE INDEX IF NOT EXISTS idx_zone_telemetry_zone ON public.zone_telemetry(zone_id);
+CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
+CREATE INDEX IF NOT EXISTS idx_users_role ON public.users(role_code);
 
 -- -----------------------------------------------------------------------------
 -- Enable Row Level Security (RLS)
@@ -97,6 +114,7 @@ ALTER TABLE public.berths ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cranes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.zone_telemetry ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.optimization_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 
 -- Permissive policies for anon / service role access
 DO $$
@@ -148,6 +166,17 @@ BEGIN
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'optimization_logs' AND policyname = 'Allow public insert optimization_logs') THEN
         CREATE POLICY "Allow public insert optimization_logs" ON public.optimization_logs FOR INSERT WITH CHECK (true);
+    END IF;
+
+    -- Users Policies
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'users' AND policyname = 'Allow public select users') THEN
+        CREATE POLICY "Allow public select users" ON public.users FOR SELECT USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'users' AND policyname = 'Allow public insert users') THEN
+        CREATE POLICY "Allow public insert users" ON public.users FOR INSERT WITH CHECK (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'users' AND policyname = 'Allow public update users') THEN
+        CREATE POLICY "Allow public update users" ON public.users FOR UPDATE USING (true);
     END IF;
 END $$;
 
@@ -208,3 +237,16 @@ VALUES
 ('D', 4, 15.0, 16.0, 8.0, 3.4, 0.30, 0.48, 44.0, 'medium'),
 ('E', 5, 11.5, 13.0, 9.0, 3.4, 0.45, 0.50, 42.0, 'medium'),
 ('F', 4, 9.2, 12.0, 9.0, 3.4, 0.25, 0.38, 31.0, 'low');
+
+-- -----------------------------------------------------------------------------
+-- Seed Canonical Personnel & Users
+-- -----------------------------------------------------------------------------
+INSERT INTO public.users (id, email, password_hash, name, title, role_code, department, shift, avatar, last_login)
+VALUES
+('usr-1', 'admin@portflow.ai', 'admin123', 'Captain Rajesh Sharma', 'Harbor Master & Operations Lead', 'admin', 'Marine Operations', '06:00 - 14:00 (Morning)', 'RS', '12 min ago'),
+('usr-2', 'supervisor@portflow.ai', 'supervisor123', 'Ananya Patel', 'Senior Shift Supervisor', 'shift_supervisor', 'Terminal Dispatch', '14:00 - 22:00 (Evening)', 'AP', '34 min ago'),
+('usr-3', 'planner@portflow.ai', 'planner123', 'Vikram Mehta', 'Quayside Berth Allocation Engineer', 'berth_planner', 'Berth Operations', '06:00 - 14:00 (Morning)', 'VM', '1 hour ago'),
+('usr-4', 'gate@portflow.ai', 'gate123', 'Sunil Verma', 'Drayage & Gate Portal Coordinator', 'gate_controller', 'Landside Logistics', '22:00 - 06:00 (Night)', 'SV', '2 hours ago'),
+('usr-5', 'viewer@portflow.ai', 'viewer123', 'Dr. Devendra Joshi', 'Maritime Authority Executive Director', 'viewer', 'Executive Board', 'General Hours', 'DJ', 'Yesterday')
+ON CONFLICT (id) DO NOTHING;
+

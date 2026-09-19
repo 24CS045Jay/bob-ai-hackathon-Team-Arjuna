@@ -10,6 +10,7 @@ import { buttonPressInteraction } from '../../utils/motion.js'
 export default function Topbar({ crumb = 'Port Operations', onOpenCopilot, onToggleSidebar }) {
   const {
     activeRole,
+    currentUser: sessionUser,
     roles,
     users,
     login,
@@ -48,7 +49,7 @@ export default function Topbar({ crumb = 'Port Operations', onOpenCopilot, onTog
     viewer: 'bg-slate-600'
   }
 
-  const currentUser = users?.find(u => u.roleCode === activeRole?.code) || users?.[0]
+  const currentUser = sessionUser || users?.find(u => u.roleCode === activeRole?.code) || users?.[0]
 
   return (
     <header className="h-16 bg-surface border-b border-line flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30 select-none transition-colors shadow-[0_1px_3px_rgba(0,0,0,0.02)]">

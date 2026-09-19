@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import AppShell from '../components/layout/AppShell.jsx'
 import { useRole } from '../context/RoleContext.jsx'
@@ -18,6 +19,7 @@ const PERMISSION_DEFINITIONS = [
 ]
 
 export default function AccessControlPage() {
+  const navigate = useNavigate()
   const { roles, users, updateRolePermission, setIsAuditLogOpen } = useRole()
   const [activeTab, setActiveTab] = useState('matrix')
   const [savedFlash, setSavedFlash] = useState(null)
@@ -82,6 +84,14 @@ export default function AccessControlPage() {
               className="text-xs font-bold"
             >
               View Security Audit Trail →
+            </Button>
+            <Button
+              variant="brand"
+              size="sm"
+              onClick={() => navigate('/login')}
+              className="text-xs font-bold"
+            >
+              + Register Station User
             </Button>
           </div>
         </div>
@@ -279,7 +289,7 @@ export default function AccessControlPage() {
                             <td className="p-4">
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full bg-sky-100 dark:bg-sky-950/60 text-[#0085db] border border-sky-200 dark:border-sky-800 flex items-center justify-center font-bold text-xs flex-none shadow-xs">
-                                  {u.avatar}
+                                  {u.avatar || (u.name ? u.name.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase() : 'OP')}
                                 </div>
                                 <div>
                                   <div className="font-bold text-ink text-xs">{u.name}</div>

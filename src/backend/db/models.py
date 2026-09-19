@@ -82,3 +82,20 @@ class OptimizationLogModel(Base):
     optimization_type = Column(String(64), nullable=False)
     status = Column(String(32), default="success")
     summary = Column(Text, nullable=True)
+
+
+class UserModel(Base):
+    __tablename__ = "users"
+
+    id = Column(String(64), primary_key=True, index=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=True)
+    name = Column(String(128), nullable=False)
+    title = Column(String(128), nullable=True)
+    role_code = Column(String(64), default="shift_supervisor", index=True)
+    department = Column(String(128), default="Terminal Dispatch")
+    shift = Column(String(64), default="06:00 - 14:00 (Morning)")
+    avatar = Column(String(8), default="OP")
+    last_login = Column(String(64), nullable=True)
+    created_at = Column(String(64), default=lambda: datetime.utcnow().isoformat())
+
