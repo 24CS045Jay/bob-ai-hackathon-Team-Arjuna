@@ -1,30 +1,46 @@
-# Presentation
+# 📊 Presentation Slide Deck — PortFlow AI (Team Arjuna)
 
-Place your slide deck in this folder.
+Place your slide deck in this folder. The evaluation pipeline specifically searches for `slides.pdf` or `slides.pptx`.
+
+---
 
 ## Accepted Formats
 
-  slides.pdf      ← Preferred (universally viewable)
-  slides.pptx     ← Acceptable
-  slides.key      ← Acceptable (macOS Keynote)
+- `slides.pdf` ← **Recommended (universally viewable across all devices)**
+- `slides.pptx` ← Microsoft PowerPoint
 
-Rename your file to `slides.pdf` (or `slides.pptx`) so the evaluation
-pipeline can locate it reliably.
+---
 
-## Recommended Slide Structure (5–8 slides)
+## 🎯 Recommended Presentation Outline for PortFlow AI (8 Slides)
 
-  Slide 1: Title — Project name, team name, track
-  Slide 2: Problem — What problem? Who has it? Why does it matter?
-  Slide 3: Solution — What you built in one clear diagram or screenshot
-  Slide 4: Architecture — How the system works technically
-  Slide 5: Demo / Key Feature — Screenshot or flow of your best feature
-  Slide 6: IBM Technologies — Specifically how you used them
-  Slide 7: Results / Impact — What does success look like? Any metrics?
-  Slide 8: Team — Names, roles, what each person built
+1. **Slide 1: Title & Team**
+   - Project: **PortFlow AI** — Autonomous Maritime Digital Twin & Operations Optimizer
+   - Team: **Team Arjuna** (Track: AI)
+   - Members: Jay Ladva (Lead), Param Shah, Nishant Virani, Smit Bhesaniya
+2. **Slide 2: The Maritime Port Congestion Crisis**
+   - Over $10B annual supply chain losses in demurrage penalties and stranded cargo.
+   - Stochastic arrival delays + tidal windows force vessels into anchorages burning 35 tons fuel/day.
+   - Legacy TOS and spreadsheets react *after* gridlocks have formed.
+3. **Slide 3: The Solution — PortFlow AI Digital Twin**
+   - Proactive 72-hour predictive congestion modeling + mathematical discrete optimization.
+   - Live digital twin dashboard connecting berths, cranes, gates, and navigation fairways.
+4. **Slide 4: Technical Architecture & Core Engines**
+   - Random Forest Regressor ($R^2 > 0.96$) forecasting Zone A–F congestion indices.
+   - Priority-queue berth allocator enforcing draft + 1.0m UKC safety margins.
+   - Earliest Deadline First (EDF) crane scheduler & Dijkstra tidal channel routing.
+   - Enterprise cloud persistence in **Supabase PostgreSQL**.
+5. **Slide 5: Grounded Operations Copilot**
+   - Natural language dispatcher powered by IBM watsonx.ai Granite / Groq / Gemini.
+   - Zero-hallucination guarantee: queries real database facts before answering.
+6. **Slide 6: Live Product Showcase & UI**
+   - Screenshots of the Oceanic Digital Twin Dashboard, 72h Gantt horizon, and live Copilot drawer.
+7. **Slide 7: Quantifiable Business & Environmental Impact**
+   - 22%–28% reduction in vessel anchorage waiting time.
+   - 18% increase in net quayside crane moves per hour.
+   - Thousands of metric tons of avoidable CO2 emissions eliminated.
+8. **Slide 8: Conclusion, Tech Stack & Next Steps**
+   - Scalability to global container ports, multi-port hinterland railway integration.
 
-## Tips
+---
 
-- Keep slides visual — diagrams beat bullet points
-- One idea per slide
-- Font size minimum 24pt for readability
-- Do not paste large code blocks into slides — reference the repo instead
+> **Note for User:** Copy your final exported PDF or PPTX into this folder named `slides.pdf` or `slides.pptx`.

@@ -1,53 +1,89 @@
 # 🚀 PortFlow AI — Intelligent Port Operations & Congestion Optimization Digital Twin
 
-> Autonomous 72-hour maritime congestion prediction, algorithmic berth and crane scheduling, dynamic channel routing, and watsonx-grounded natural language co-pilot for high-throughput container terminals.
+> Autonomous 72-hour maritime congestion prediction, algorithmic berth and crane scheduling, dynamic channel routing, Supabase cloud database synchronization, and grounded natural language AI Copilot for high-throughput container terminals.
 
 ---
 
-## 👥 Team
+## 👥 Team Details
 
 | Field | Value |
 |---|---|
-| **Team Name** | Team Arjuna |
-| **Track** | AI |
-| **Team Lead** | Arjuna Lead — team-arjuna@bob-ai.local |
-| **Members** | Jay, Team Arjuna Engineers |
+| **Team Name** | **Team Arjuna** |
+| **Track** | **AI (Artificial Intelligence & Operations Research)** |
+| **Team Lead** | **Jay Ladva** (`24cs045@charusat.edu.in`) |
+| **Team Members** | • **Jay Ladva** — Backend Architecture, AI Pipelines & API Orchestration<br>• **Param Shah** — Machine Learning Models & Constraint Optimization Solvers<br>• **Nishant Virani** — React Digital Twin Web UI, GIS Visualization & UX<br>• **Smit Bhesaniya** — Cloud Data Infrastructure, Supabase & Telemetry Integration |
 
 ---
 
-## 🎯 Problem Statement
+## 🎯 Problem Statement & Justification
 
-Modern high-density container ports face severe, cascading congestion caused by unpredictable vessel arrival delays, variable tidal draft windows, and reactive, manual spreadsheet-based dispatching of scarce quay cranes and deep-water berths. When delays cascade, ships wait offshore in anchorages consuming up to 35 tons of marine fuel daily while terminal yard congestion peaks, costing global supply chains over $10B annually and producing millions of tons of avoidable carbon emissions.
+Modern high-density deepwater container terminals face severe, cascading operational congestion caused by:
+1. **Unpredictable Vessel Arrival Delays:** Stochastic weather disruptions, canal chokepoints, and transshipment bottlenecks skew scheduled arrival windows.
+2. **Dynamic Hydrographic Constraints:** Semi-diurnal tidal variations strictly govern Under-Keel Clearance (UKC); low-tide windows force deep-draft Ultra-Large Container Vessels (ULCVs) to wait offshore at anchor, consuming up to 35 metric tons of heavy fuel oil daily per vessel.
+3. **Reactive, Spreadsheet-Based Resource Allocation:** Terminal superintendents manage multi-million-dollar berths, Ship-to-Shore (STS) gantry cranes, and yard stacks using fragmented spreadsheets and radio handoffs after gridlocks have already formed.
+
+This lack of predictive foresight costs global maritime supply chains over **$10 Billion annually in demurrage penalties** and generates millions of tons of avoidable coastal greenhouse gas emissions.
 
 ---
 
-## 💡 Solution
+## 💡 Solution Overview
 
-PortFlow AI is an end-to-end digital twin and AI orchestration engine specifically engineered for container ports. It couples a Random Forest machine learning pipeline predicting 72-hour zone-level congestion indices with a deterministic discrete optimization engine for priority berth assignment, Earliest Deadline First (EDF) crane scheduling, and draft-constrained channel routing. Operations directors interact with the twin through an operational dashboard and a grounded AI Copilot powered by IBM watsonx.ai (with deterministic offline demo fallbacks).
+**PortFlow AI** transforms reactive terminal operating procedures into an autonomous, proactive digital twin:
+- **Predictive Congestion Forecasting:** Machine learning models forecast congestion scores (0–100) and identify bottleneck drivers across 6 operational zones up to 72 hours ahead.
+- **Deterministic Priority Berth Allocation:** Algorithmic solver assigns incoming vessels to 12 berths, enforcing physical vessel length (LOA), draft + 1.0m UKC safety margins, and cargo type compatibility.
+- **Earliest Deadline First (EDF) Crane Dispatch:** Allocates 7 STS gantry cranes based on departure deadlines, TEU workloads, and demurrage risks to maximize net throughput (moves/hour).
+- **Dijkstra Navigational Waypoint Routing:** Guides vessels across 14 hydrographic waypoints, dynamically calculating safe passage depths during fluctuating tide cycles (+3.4m MHHW).
+- **Supabase Cloud Database & RLS:** Cloud-native PostgreSQL persistence storing canonical vessels, berths, cranes, telemetry, and audit logs with Row Level Security.
+- **Context-Grounded AI Operations Copilot:** Natural language assistant powered by IBM watsonx.ai Granite, Groq (Llama 3.3), or Google Gemini, with an offline deterministic engine that eliminates hallucinations by directly referencing live digital twin state.
 
 ---
 
 ## ✨ Key Features
 
-- **72-Hour Predictive Congestion Engine:** Random Forest regressor predicting congestion scores (0–100), risk tiers, and bottleneck factors across 6 operational port zones in 6-hour time steps.
-- **Priority Berth Allocation Optimizer:** Greedy priority queue assigning vessels to 12 berths based on draft limits, vessel length (LOA), TEU workload, and priority flags.
-- **Earliest Deadline First (EDF) Crane Dispatcher:** Dynamic assignment of 7 STS (Ship-to-Shore) container gantry cranes minimizing vessel dwell time and demurrage fines.
-- **Draft & Tide Constrained Vessel Routing:** Graph-based Dijkstra navigation through 14 port waypoints enforcing minimum under-keel clearance (UKC) and dynamic tidal heights.
-- **watsonx.ai Grounded Maritime Copilot:** Natural language operations advisor integrating live terminal state, berth queues, and weather telemetry to provide actionable dispatch decisions.
+- 🔮 **72-Hour Predictive Congestion Engine:** Random Forest regressor trained on 2,400 multi-zone operational observations, producing continuous congestion indices ($R^2 > 0.96$) and classifying risk tiers (Low, Medium, High, Critical).
+- ⚓ **Priority Berth Allocation Optimizer:** Constraint satisfaction solver matching vessels to candidate berths while minimizing anchorage waiting time and vessel dwell hours.
+- 🏗️ **Quay Crane Dispatcher (EDF):** Dynamic crane split scheduler optimizing 7 STS gantry cranes to eliminate idle quayside time.
+- 🌊 **Tide-Aware Channel Navigator:** Graph-based Dijkstra algorithm recommending alternate maritime channels and pilotage paths when primary basins exceed congestion thresholds.
+- 📅 **72-Hour Rolling Master Schedule:** 12 six-hour planning horizons forecasting vessel turnarounds, crane utilization, and yard capacity.
+- 🗄️ **Supabase Cloud Database:** Full schema migrations, real-time table queries, and automated seeding for vessels, berths, cranes, and telemetry.
+- 🤖 **Zero-Hallucination AI Copilot:** Specialized maritime dispatcher assistant strictly grounded in live terminal data. Handles fleet queries, berth vacancy checks, crane throughput, gate queues, and weather advisories without fabricating data.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Tech Stack & Technologies
 
-| Category | Technologies |
+| Layer | Technologies |
 |---|---|
-| **Languages** | Python 3.11+, JavaScript (ES2022) |
-| **Frameworks** | FastAPI, React 18, Vite |
-| **IBM Technologies** | IBM watsonx.ai (`ibm/granite-3-8b-instruct`), IBM Cloud |
-| **Optimisation & ML** | Scikit-learn, NumPy, Pandas, Joblib, Dijkstra Graph Routing, Priority Queues |
-| **Databases** | SQLite (SQLAlchemy ORM) with canonical Port of Arjuna seed data |
-| **Styling & Visualization** | Vanilla CSS Design System, Tailwind CSS, Lucide Icons, Canvas Digital Twin |
-| **DevOps & Containers** | Docker, Docker Compose, GitHub Actions CI/CD |
+| **Frontend & UI** | React 18, Vite, Vanilla CSS Design System, TailwindCSS, Lucide Icons, Canvas Digital Twin, Recharts |
+| **Backend & APIs** | Python 3.11+, FastAPI, Uvicorn, Pydantic v2, RESTful Architecture |
+| **Machine Learning** | Scikit-learn (RandomForestRegressor, StandardScaler), NumPy, Pandas, Joblib |
+| **Discrete Optimization** | Pure Python Discrete Solvers, Dijkstra Graph Routing, Priority Queues, Earliest Deadline First (EDF) |
+| **Databases** | **Supabase (PostgreSQL)** with PostgREST, SQLAlchemy 2.0 ORM, Local SQLite (`portflow.db`) fallback |
+| **AI & LLM Services** | **IBM watsonx.ai** (`ibm/granite-3-8b-instruct`), **Groq Cloud** (`llama-3.3-70b-versatile`), **Google Gemini**, Deterministic Rule Engine |
+| **DevOps & Deployment** | Docker, Docker Compose, GitHub Actions, Vercel |
+
+---
+
+## 🔑 API Keys & Environment Configuration
+
+PortFlow AI supports both cloud services and 100% offline local development.
+
+### Supabase Cloud Database Credentials
+The project is pre-configured with the following Supabase instance:
+- **Project URL:** `https://gmqrrnaktdzoigbquhsp.supabase.co`
+- **Publishable / Anon API Key:** `sb_publishable_ZKrkMyN83WE1YuJKmDehcQ_BEh9_vwc`
+- **Database Schema & Migration:** `src/backend/db/supabase_schema.sql`
+
+### AI Copilot LLM Provider Keys (Choose any free key)
+Configure these in `src/backend/.env`:
+
+| Provider | Environment Variable | Where to get free key |
+|---|---|---|
+| **Groq (Recommended)** | `GROQ_API_KEY` | Free at [console.groq.com](https://console.groq.com) |
+| **OpenRouter** | `OPENROUTER_API_KEY` | Free models at [openrouter.ai](https://openrouter.ai/keys) |
+| **Google Gemini** | `GEMINI_API_KEY` | Free tier at [aistudio.google.com](https://aistudio.google.com/app/apikey) |
+| **IBM watsonx.ai** | `WATSONX_API_KEY` + `WATSONX_PROJECT_ID` | [cloud.ibm.com](https://cloud.ibm.com) |
+| **Deterministic Mode** | `DEMO_MODE=true` | Zero external API keys needed (built-in offline engine) |
 
 ---
 
@@ -55,102 +91,121 @@ PortFlow AI is an end-to-end digital twin and AI orchestration engine specifical
 
 ```
 ├── src/
-│   ├── ml/                      # Machine learning training, inference & synthetic data
-│   │   ├── data_generator.py    # 2,000 synthetic observations for zones A-F
-│   │   ├── feature_engineering.py# Feature transforms & StandardScaler
-│   │   ├── train.py             # Random Forest regressor trainer & metrics
-│   │   ├── predict.py           # Contract A inference engine with fallback
-│   │   └── models/              # Trained pkl and feature importance JSON
-│   ├── optimisation/            # Contract B deterministic operational algorithms
-│   │   ├── berth_assignment.py  # Priority queue berth allocator
-│   │   ├── crane_assignment.py  # EDF crane scheduler
-│   │   ├── routing.py           # Dijkstra channel waypoint navigator
+│   ├── backend/                 # FastAPI REST API & Copilot service
+│   │   ├── db/                  # Database connections, models & schemas
+│   │   │   ├── database.py      # SQLAlchemy ORM (PostgreSQL & SQLite fallback)
+│   │   │   ├── models.py        # Vessel, Berth, Crane, Telemetry ORM models
+│   │   │   ├── seed.py          # Canonical Port of Arjuna dataset seed
+│   │   │   ├── supabase_client.py # Supabase REST client & sync service
+│   │   │   └── supabase_schema.sql # Complete Supabase PostgreSQL DDL migration
+│   │   ├── models/schemas.py    # Pydantic v2 request/response contracts
+│   │   ├── routers/             # Predictions, Optimisation, Planning, Copilot, Supabase
+│   │   ├── services/            # ML inference, Discrete solvers, Copilot engine
+│   │   ├── requirements.txt     # Python backend dependencies
+│   │   └── main.py              # Application entrypoint & CORS middleware
+│   ├── frontend/                # React 18 + Vite Operations Digital Twin
+│   │   ├── src/                 # Oceanic UI, Copilot drawer, Gantt & GIS maps
+│   │   └── package.json         # Frontend dependencies
+│   ├── ml/                      # Machine Learning Training & Inference
+│   │   ├── data_generator.py    # 2,400 synthetic operational observations
+│   │   ├── feature_engineering.py# Normalization & feature encoding
+│   │   ├── train.py             # Random Forest regressor trainer
+│   │   └── predict.py           # Real-time zone congestion scoring
+│   ├── optimisation/            # Operational Discrete Optimization Solvers
+│   │   ├── berth_assignment.py  # Priority-queue berth allocator
+│   │   ├── crane_assignment.py  # Earliest Deadline First (EDF) crane scheduler
+│   │   ├── routing.py           # Dijkstra UKC dynamic fairway routing
 │   │   └── planner_72h.py       # 12-slice multi-horizon operational engine
-│   ├── backend/                 # FastAPI REST services & watsonx Copilot
-│   │   ├── db/                  # SQLite models and canonical Port of Arjuna seed
-│   │   ├── models/schemas.py    # Pydantic v2 schemas
-│   │   ├── services/            # ML, Optimiser, and Copilot service clients
-│   │   ├── routers/             # Predictions, Optimisation, Planning, Copilot
-│   │   └── main.py              # Application entrypoint & CORS
-│   ├── frontend/                # React 18 + Vite digital twin operations web UI
-│   │   └── src/                 # Oceanic UI, Copilot sidebar, and live charts
-│   ├── data_contract.md         # Canonical zones, berths, cranes & vessels
-│   ├── docker-compose.yml       # Production/local multi-container deployment
-│   └── .env.example             # Documented environment variables
-├── docs/                        # Comprehensive technical documentation
-│   ├── problem-statement.md
-│   ├── solution-overview.md
-│   ├── architecture.md
-│   └── setup-guide.md
-├── demo/                        # Hackathon evaluation artifacts
-│   ├── screenshots/             # Production UI captures
-│   ├── demo-video-link.txt      # Video walk-through URL
-│   └── live-demo-url.txt        # Deployed application URL
-├── presentation/                # Slide decks & executive overview
-└── submission.yaml              # Validated hackathon submission metadata
+│   ├── data_contract.md         # Canonical maritime operational specifications
+│   ├── docker-compose.yml       # Containerized multi-service deployment
+│   └── .env.example             # Comprehensive environment template
+├── docs/                        # Complete technical documentation suite
+│   ├── problem-statement.md     # Deep dive into maritime port congestion
+│   ├── solution-overview.md     # Architectural walkthrough & solver principles
+│   ├── architecture.md          # Multi-tier system architecture diagrams
+│   └── setup-guide.md           # Step-by-step installation & deployment guide
+├── demo/                        # Submission demonstration assets
+│   ├── demo-video-link.txt      # Video walk-through URL (add manually)
+│   ├── live-demo-url.txt        # Deployed application URL (add manually)
+│   └── screenshots/             # Production UI captures
+├── presentation/                # Slide decks & executive briefing
+│   ├── slides.pdf               # Presentation deck (add manually)
+│   └── README.md                # Presentation guide
+└── submission.yaml              # Verified hackathon submission metadata
 ```
 
 ---
 
-## ⚡ How to Run
+## ⚡ Quickstart & How to Run
 
-### Option A: Local Development (Quickstart)
-
+### Step 1: Clone Repository & Setup Environment
 ```bash
-# 1. Clone the repository
 git clone https://github.com/24CS045Jay/bob-ai-hackathon-Team-Arjuna.git
 cd bob-ai-hackathon-Team-Arjuna
 
-# 2. Setup Python environment and install dependencies
-cd src
-pip install -r ml/requirements.txt
-pip install -r backend/requirements.txt
+# Configure backend environment
+cd src/backend
+cp .env.example .env
+# Edit .env to add your free GROQ_API_KEY or use DEMO_MODE=true
+```
 
-# 3. Train the ML model and seed the database
-python ml/train.py
-python backend/db/seed.py
+### Step 2: Install Python Dependencies & Train ML Model
+```bash
+# In src/backend
+pip install -r requirements.txt
+pip install -r ../ml/requirements.txt
 
-# 4. Start FastAPI backend (Terminal 1)
-uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+# Train Random Forest Congestion Model
+python ../ml/train.py
 
-# 5. Start Frontend UI (Terminal 2)
-cd frontend
+# Initialize local SQLite database
+python db/seed.py
+```
+
+### Step 3: Run Backend API
+```bash
+# From src/backend
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+- **Interactive Swagger Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Supabase Cloud Status:** [http://localhost:8000/api/supabase/status](http://localhost:8000/api/supabase/status)
+- **Health Probe:** [http://localhost:8000/health](http://localhost:8000/health)
+
+### Step 4: Run React Digital Twin UI
+```bash
+# In a new terminal
+cd src/frontend
 npm install
 npm run dev
-# Open http://localhost:5173
 ```
-
-### Option B: Docker Compose
-
-```bash
-cd src
-docker-compose up --build
-# Access UI at http://localhost:5173 and API at http://localhost:8000/docs
-```
+- **Operations Dashboard:** [http://localhost:5173](http://localhost:5173)
 
 ---
 
-## 🖥️ Demo
+## 🗄️ Setting Up Supabase Database (One-Click)
 
-| Artifact | Link |
-|---|---|
-| 📹 Demo Video | [See demo/demo-video-link.txt](demo/demo-video-link.txt) |
-| 🌐 Live Demo | [See demo/live-demo-url.txt](demo/live-demo-url.txt) |
-| 🖼️ Screenshots | [See demo/screenshots/](demo/screenshots/) |
-| 📊 Presentation | [See presentation/slides.pdf](presentation/) |
+1. Open your [Supabase Dashboard](https://supabase.com/dashboard/project/gmqrrnaktdzoigbquhsp).
+2. Navigate to **SQL Editor** -> **New Query**.
+3. Copy the entire contents of [`src/backend/db/supabase_schema.sql`](src/backend/db/supabase_schema.sql).
+4. Click **Run**.
+5. All 5 tables (`vessels`, `berths`, `cranes`, `zone_telemetry`, `optimization_logs`), RLS policies, and 15 canonical vessels will be created instantly!
+6. Verify live status anytime via `GET http://localhost:8000/api/supabase/status`.
 
 ---
 
-## ⚠️ Known Limitations
+## 🖥️ Submission Deliverables
 
-- **AIS Telemetry Stream:** Live AIS satellite stream is simulated in DEMO_MODE using realistic 15-minute kinematic updates rather than a paid commercial terrestrial AIS feed.
-- **Tidal Table Scope:** Dynamic tidal predictions are currently calibrated for the Port of Arjuna hydrographic zone; international port transfers require local harmonic constituent tables.
-- **Offline LLM Operation:** When IBM watsonx credentials are not provided, Copilot falls back to deterministic context-grounded reasoning without hallucination.
+| Deliverable | Location / Link | Status |
+|---|---|---|
+| 📹 **Demo Video** | [`demo/demo-video-link.txt`](demo/demo-video-link.txt) | *https://youtu.be/Pz58w6sBimE?si=T5Drd5c3xLgH1ifC*|
+| 🌐 **Live Deployed App** | [`demo/live-demo-url.txt`](demo/live-demo-url.txt) | *https://frontend-coral-alpha-83.vercel.app* |
+| 📊 **Presentation Slides** | [`presentation/slides.pdf`](presentation/) | *presentation/slides* |
+| 🖼️ **Screenshots** | [`demo/screenshots/`](demo/screenshots/) | Available in folder |
 
 ---
 
 ## 🏅 What We're Most Proud Of
 
-- **Zero-Hallucination Grounded AI:** The Copilot synthesizes live numerical state directly from the discrete optimization solver and ML prediction vectors, answering operational questions with exact berth IDs, tidal heights, and vessel names.
-- **Rigorous Multi-Horizon Optimization:** The 72-hour planning engine combines stochastic ML congestion forecasts with mathematical constraints (draft, LOA, crane availability), ensuring berth allocations are hydraulically and physically feasible.
-- **Production-Ready Maritime UX:** A responsive, oceanic-themed digital twin dashboard equipped with role-based access, dark/light modes, interactive Gantt schedules, and high-density situational maps.
+- **Zero-Hallucination AI Copilot:** By feeding live database state into the LLM system prompt and providing a high-precision deterministic fallback, the Copilot answers complex dispatch queries with exact real-world numbers without fabricating answers.
+- **Physical Safety Constraints in Optimization:** The berth and crane solvers strictly enforce draft + 1.0m Under-Keel Clearance, vessel LOA, and crane compatibility, guaranteeing that every schedule generated is physically feasible.
+- **Robust Multi-Provider AI Architecture:** Supports IBM watsonx.ai, Groq, Google Gemini, OpenRouter, and offline mode with automatic fallback.
