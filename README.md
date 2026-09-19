@@ -10,7 +10,7 @@
 |---|---|
 | **Team Name** | **Team Arjuna** |
 | **Track** | **AI (Artificial Intelligence & Operations Research)** |
-| **Team Lead** | **Jay Ladva** (`24cs045.jay@gmail.com`) |
+| **Team Lead** | **Jay Ladva** (`24cs045@charusat.edu.in`) |
 | **Team Members** | • **Jay Ladva** — Backend Architecture, AI Pipelines & API Orchestration<br>• **Param Shah** — Machine Learning Models & Constraint Optimization Solvers<br>• **Nishant Virani** — React Digital Twin Web UI, GIS Visualization & UX<br>• **Smit Bhesaniya** — Cloud Data Infrastructure, Supabase & Telemetry Integration |
 
 ---
@@ -197,9 +197,9 @@ npm run dev
 
 | Deliverable | Location / Link | Status |
 |---|---|---|
-| 📹 **Demo Video** | [`demo/demo-video-link.txt`](demo/demo-video-link.txt) | *Add URL manually* |
-| 🌐 **Live Deployed App** | [`demo/live-demo-url.txt`](demo/live-demo-url.txt) | *Add URL manually* |
-| 📊 **Presentation Slides** | [`presentation/slides.pdf`](presentation/) | *Add file manually* |
+| 📹 **Demo Video** | [`demo/demo-video-link.txt`](demo/demo-video-link.txt) | *https://youtu.be/Pz58w6sBimE?si=T5Drd5c3xLgH1ifC*|
+| 🌐 **Live Deployed App** | [`demo/live-demo-url.txt`](demo/live-demo-url.txt) | *https://frontend-coral-alpha-83.vercel.app* |
+| 📊 **Presentation Slides** | [`presentation/slides.pdf`](presentation/) | *presentation/slides* |
 | 🖼️ **Screenshots** | [`demo/screenshots/`](demo/screenshots/) | Available in folder |
 
 ---

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useRole } from '../../context/RoleContext.jsx'
 import { useTheme } from '../../context/ThemeContext.jsx'
 import NotificationCenter from './NotificationCenter.jsx'
+import BackendStatusBadge from './BackendStatusBadge.jsx'
 import { buttonPressInteraction } from '../../utils/motion.js'
 
 export default function Topbar({ crumb = 'Port Operations', onOpenCopilot, onToggleSidebar }) {
@@ -94,8 +95,11 @@ export default function Topbar({ crumb = 'Port Operations', onOpenCopilot, onTog
         </div>
       </div>
 
-      {/* Right Controls: Theme, Language Flag, Messages, Notifications, Avatar */}
+      {/* Right Controls: Backend Status, Theme, Language Flag, Messages, Notifications, Avatar */}
       <div className="flex items-center gap-1.5 sm:gap-2.5">
+        {/* Real-time Backend API Telemetry Indicator */}
+        <BackendStatusBadge />
+
         {/* Light / Dark Mode Toggle Icon (Moon/Sun) */}
         <button
           onClick={toggleTheme}
