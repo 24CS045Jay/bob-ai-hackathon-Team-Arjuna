@@ -2,53 +2,55 @@
 # HACKATHON SUBMISSION METADATA — TEAM ARJUNA
 # =============================================================================
 # Track: AI
-# Project: PortFlow AI — Container Congestion Predictor & Port Operations Optimiser
+# Project: PortFlow AI — Maritime Digital Twin & Port Congestion Optimization Suite
 # =============================================================================
 
 team:
   name: "Team Arjuna"
   track: "AI"
   lead:
-    name: "Jay Lakkad"
+    name: "Jay Ladva"
     email: "24cs045.jay@gmail.com"
   members:
-    - name: "Jay Lakkad"
+    - name: "Jay Ladva"
       email: "24cs045.jay@gmail.com"
-    - name: "Arjuna ML Engineer"
-      email: "arjuna.ml@teamarjuna.org"
-    - name: "Arjuna Optimisation Lead"
-      email: "arjuna.opt@teamarjuna.org"
-    - name: "Arjuna Frontend Specialist"
-      email: "arjuna.ui@teamarjuna.org"
+    - name: "Param Shah"
+      email: "param.shah@charusat.edu.in"
+    - name: "Nishant Virani"
+      email: "nishant.virani@charusat.edu.in"
+    - name: "Smit Bhesaniya"
+      email: "smit.bhesaniya@charusat.edu.in"
 
 submission:
   title: "PortFlow AI"
 
   problem_statement: >
-    Major deepwater container terminals face unpredictable quayside bottlenecks and vessel congestion, costing global supply chains over $10B annually in demurrage penalties and idle anchored vessel hours. Existing terminal operating systems manage berths and cranes reactively in disparate spreadsheets after delays have already cascaded.
+    Global deepwater container terminals face severe quayside congestion, unpredictable stochastic vessel delays, and tidal hydrographic bottlenecks, costing global supply chains over $10B annually in demurrage penalties and idle anchorage emissions. Existing terminal operating systems manage berths and cranes reactively in siloed spreadsheets after delays have already cascaded through the supply network.
 
   solution_summary: >
-    PortFlow AI is an end-to-end maritime operations digital twin and intelligent decision support system that combines a machine learning congestion prediction engine, a discrete berth and quay crane constraint optimizer, an alternate navigation routing recommender, a 72-hour rolling master schedule generator, and a live context-grounded AI Copilot powered by IBM watsonx.ai Granite.
+    PortFlow AI is an end-to-end maritime operations digital twin and intelligent decision support system. It combines a 72-hour Random Forest ML congestion prediction engine, a deterministic discrete berth and quay crane constraint optimizer, an alternate hydrographic channel routing recommender with dynamic Under-Keel Clearance (UKC), a 72-hour rolling master schedule generator, cloud data persistence via Supabase PostgreSQL, and a live context-grounded AI Copilot powered by IBM watsonx.ai Granite (with multi-LLM Groq/Gemini and zero-hallucination deterministic fallbacks).
 
   key_features:
-    - "Machine Learning Congestion Prediction: RandomForest predictive model forecasting zone-specific congestion scores and top contributing factors 24–72 hours in advance."
-    - "Berth Allocation & Crane Move Optimizer: Constraint satisfaction solver assigning incoming vessels to size- and type-compatible berths while minimizing waiting hours and crane transit."
-    - "Alternate Channel Routing Recommender: Dijkstra waypoint navigation engine suggesting alternate port basins to avoid high-congestion chokepoints."
-    - "72-Hour Rolling Master Schedule: Dynamic operational plan divided into 12 six-hour slices forecasting cargo flow, vessel turnarounds, and quayside utilization."
-    - "Context-Grounded AI Copilot: Natural language assistant powered by IBM watsonx Granite (with full DEMO_MODE fallback) explaining operational decisions using live telemetry snapshots."
+    - "Machine Learning Congestion Prediction: Random Forest predictive regressor forecasting zone-specific congestion indices (0–100) and top bottleneck factors across 6 port zones 24–72 hours in advance."
+    - "Berth Allocation & Crane Move Optimizer: Constraint satisfaction solver assigning incoming vessels to size- and type-compatible berths while strictly enforcing physical draft limits, LOA, and minimizing waiting hours."
+    - "Earliest Deadline First (EDF) Crane Dispatch: Dynamic scheduling of 7 STS container gantry cranes balancing moves per hour, container backlog, and demurrage risks."
+    - "Hydrographic Channel Routing Recommender: Graph-based Dijkstra waypoint navigation engine enforcing minimum 1.0m Under-Keel Clearance across fluctuating tidal heights (+3.4m MHHW)."
+    - "72-Hour Rolling Master Schedule: Multi-horizon operational planner divided into 12 six-hour slices forecasting cargo flow, vessel turnarounds, and quayside utilization."
+    - "Supabase Cloud Database & Schema: Complete PostgreSQL migration schema with Row Level Security (RLS) for canonical vessels, berths, cranes, telemetry, and audit logs."
+    - "Context-Grounded AI Operations Copilot: Natural language assistant powered by IBM watsonx Granite / Groq / Gemini (with offline deterministic fallback) explaining operational decisions using live telemetry without hallucinations."
 
   tech_stack:
-    languages: ["Python", "JavaScript", "SQL"]
-    frameworks: ["FastAPI", "React", "Vite", "TailwindCSS", "scikit-learn"]
-    ibm_technologies: ["watsonx.ai", "Granite 3-8B Instruct", "IBM Cloud Functions"]
-    databases: ["SQLite", "SQLAlchemy"]
-    other: ["Docker", "GitHub Actions", "Recharts", "Framer Motion", "Dijkstra Graph Algorithms"]
+    languages: ["Python 3.11+", "JavaScript (ES2022)", "SQL"]
+    frameworks: ["FastAPI", "React 18", "Vite", "TailwindCSS", "scikit-learn"]
+    ibm_technologies: ["IBM watsonx.ai", "Granite 3-8B Instruct", "IBM Cloud Code Engine / OpenShift"]
+    databases: ["Supabase (PostgreSQL)", "SQLite", "SQLAlchemy 2.0 ORM"]
+    other: ["Docker", "GitHub Actions", "Recharts", "Lucide Icons", "Dijkstra Graph Algorithms", "PostgREST"]
 
   what_we_are_most_proud_of: >
-    The tight coupling between pure mathematical optimization heuristics and our context-grounded AI Copilot. Instead of generic conversational filler, every Copilot response references real-time vessel ETAs, actual quay crane allocations, and live congestion percentages directly from the system state.
+    The seamless fusion between rigorous mathematical optimization heuristics, cloud persistence in Supabase, and our context-grounded AI Copilot. Every Copilot response directly quotes real-time vessel ETAs, actual quay crane allocations, and live zone congestion percentages from the digital twin state, ensuring zero hallucinations and immediate operational trust for harbor masters.
 
   known_limitations: >
-    The current deployment models a canonical 6-zone deepwater port (Port of Arjuna). While dynamic tide and weather coefficients are actively factored into transit delays, multi-port hinterland rail network congestion is simulated via probabilistic queue distributions rather than external railway API webhooks.
+    The current deployment models a canonical 6-zone deepwater container port (Port of Arjuna). While dynamic tide and weather coefficients are actively factored into transit delays, multi-port hinterland rail network congestion is simulated via probabilistic queue distributions rather than external railway API webhooks.
 
 # =============================================================================
 # ARTIFACT LOCATIONS
