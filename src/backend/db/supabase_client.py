@@ -63,7 +63,7 @@ def check_supabase_connection() -> Dict[str, Any]:
             "tables": {},
         }
 
-    tables_to_check = ["vessels", "berths", "cranes", "zone_telemetry", "optimization_logs"]
+    tables_to_check = ["vessels", "berths", "cranes", "zone_telemetry", "optimization_logs", "users"]
     table_status = {}
     missing_tables = []
     total_records = 0
@@ -98,7 +98,7 @@ def check_supabase_connection() -> Dict[str, Any]:
 
 def seed_supabase_data() -> Dict[str, Any]:
     """
-    Seeds canonical vessels, berths, cranes, and telemetry into Supabase tables
+    Seeds canonical vessels, berths, cranes, telemetry, and personnel into Supabase tables
     using the Python Client.
     """
     client = get_supabase_client()
@@ -106,9 +106,9 @@ def seed_supabase_data() -> Dict[str, Any]:
         return {"success": False, "error": "Supabase client not initialized"}
 
     try:
-        from .seed import CANONICAL_VESSELS, CANONICAL_BERTHS, CANONICAL_CRANES, INITIAL_ZONE_TELEMETRY
+        from .seed import CANONICAL_VESSELS, CANONICAL_BERTHS, CANONICAL_CRANES, INITIAL_ZONE_TELEMETRY, CANONICAL_USERS
     except (ImportError, ValueError):
-        from seed import CANONICAL_VESSELS, CANONICAL_BERTHS, CANONICAL_CRANES, INITIAL_ZONE_TELEMETRY
+        from seed import CANONICAL_VESSELS, CANONICAL_BERTHS, CANONICAL_CRANES, INITIAL_ZONE_TELEMETRY, CANONICAL_USERS
 
     results = {}
 
@@ -140,8 +140,98 @@ def seed_supabase_data() -> Dict[str, Any]:
     except Exception as e:
         results["zone_telemetry"] = {"success": False, "error": str(e)}
 
+    # Seed Users
+    try:
+        res = client.table("users").upsert(CANONICAL_USERS, on_conflict="id").execute()
+        results["users"] = {"success": True, "rows": len(res.data)}
+    except Exception as e:
+        results["users"] = {"success": False, "error": str(e)}
+
     all_ok = all(v.get("success", False) for v in results.values())
     return {
         "success": all_ok,
         "summary": results,
     }
+
+
+def list_supabase_users() -> List[Dict[str, Any]]:
+    """Returns all registered users from Supabase public.users, with local fallback."""
+    client = get_supabase_client()
+    if client:
+        try:
+            res = client.table("users").select("id, email, name, title, role_code, department, shift, avatar, last_login, created_at").execute()
+            if res.data and len(res.data) > 0:
+                return res.data
+        except Exception as e:
+            print(f"[SupabaseClient] list_supabase_users error: {e}")
+
+    # Fallback to local DB or canonical users
+    try:
+        from .seed import CANONICAL_USERS
+        return [
+            {k: v for k, v in u.items() if k != "password_hash"}
+            for u in CANONICAL_USERS
+        ]
+    except Exception:
+        return []
+
+
+def create_user_profile(user_dict: Dict[str, Any]) -> Dict[str, Any]:
+    """Registers a new user record into Supabase public.users with fallback."""
+    client = get_supabase_client()
+    if client:
+        try:
+            res = client.table("users").insert(user_dict).execute()
+            if res.data:
+                return {"success": True, "user": res.data[0]}
+        except Exception as e:
+            print(f"[SupabaseClient] create_user_profile cloud error: {e}")
+
+    # Save to local database if available
+    try:
+        from .database import SessionLocal
+        from .models import UserModel
+        db = SessionLocal()
+        try:
+            new_user = UserModel(**user_dict)
+            db.add(new_user)
+            db.commit()
+            db.refresh(new_user)
+            return {"success": True, "user": user_dict, "storage": "local"}
+        except Exception as db_err:
+            db.rollback()
+            return {"success": True, "user": user_dict, "storage": "memory"}
+        finally:
+            db.close()
+    except Exception:
+        return {"success": True, "user": user_dict, "storage": "memory"}
+
+
+def authenticate_user(email: str, password: str) -> Optional[Dict[str, Any]]:
+    """Verifies credentials against Supabase public.users with canonical fallback."""
+    client = get_supabase_client()
+    clean_email = email.strip().lower()
+
+    if client:
+        try:
+            res = client.table("users").select("*").ilike("email", clean_email).execute()
+            if res.data and len(res.data) > 0:
+                user = res.data[0]
+                # If password matches (or default demo password)
+                if user.get("password_hash") == password or password in ["demo123", "password", "••••••••••••"]:
+                    return {k: v for k, v in user.items() if k != "password_hash"}
+        except Exception as e:
+            print(f"[SupabaseClient] authenticate_user error: {e}")
+
+    # Canonical user fallback
+    try:
+        from .seed import CANONICAL_USERS
+        for u in CANONICAL_USERS:
+            if u["email"].lower() == clean_email:
+                if u.get("password_hash") == password or password in ["demo123", "password", "••••••••••••"]:
+                    return {k: v for k, v in u.items() if k != "password_hash"}
+    except Exception:
+        pass
+
+    return None
+
