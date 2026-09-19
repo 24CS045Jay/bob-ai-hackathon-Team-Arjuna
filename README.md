@@ -208,7 +208,7 @@ npm run dev
 |---|---|---|
 | 📹 **Demo Video** | [`demo/demo-video-link.txt`](demo/demo-video-link.txt) | *https://youtu.be/Pz58w6sBimE?si=T5Drd5c3xLgH1ifC*|
 | 🌐 **Live Deployed App** | [`demo/live-demo-url.txt`](demo/live-demo-url.txt) | *https://bob-ai-hackathon-team-arjuna-pjsl.vercel.app/* |
-| 📊 **Presentation Slides** | [`presentation/slides.pdf`](presentation/) | *presentation/slides* |
+| 📊 **Presentation Slides** | [`presentation/slides.pdf`](presentation/) | *presentation/slide* |
 | 🖼️ **Screenshots** | [`demo/screenshots/`](demo/screenshots/) | Available in folder |
 
 ---
